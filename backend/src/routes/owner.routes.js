@@ -1,5 +1,5 @@
 import {Router} from "express";
-import { addRestaurantDetails,addLocationDetails,addOperationDetails,addBrandingDetails,getMyRestaurants,getRestaurantImages} from "../controllers/owner.controller.js";
+import { addRestaurantDetails,addLocationDetails,addOperationDetails,addBrandingDetails,getMyRestaurants,getRestaurantImages,addRestaurantCuisines,addMenuItems,updateMenuItems} from "../controllers/owner.controller.js";
 import {verifyJWT} from "../middlewares/auth.middleware.js";
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -10,4 +10,9 @@ router.route("/add-operation-details/:restaurant_id").post(verifyJWT,addOperatio
 router.route("/add-branding-details/:restaurant_id").post(verifyJWT,upload.fields([{name:"logo",maxCount:1},{name:"banner",maxCount:1}]),addBrandingDetails);
 router.route("/get-my-restaurants").get(verifyJWT,getMyRestaurants)
 router.route("/get-restaurant-images/:restaurant_id").get(verifyJWT,getRestaurantImages);
+
+router.route("/add-restaurant-cuisines/:restaurant_id").post(verifyJWT,addRestaurantCuisines);
+router.route("/add-menu-items/:restaurant_id").post(verifyJWT,upload.fields([{name:"menu_image",maxCount:1}]),addMenuItems);
+router.route("/update-menu-items/:restaurant_id/:menu_item_id").patch(verifyJWT,upload.fields([{name:"image_url",maxCount:1}]),updateMenuItems);
+
 export default router;
