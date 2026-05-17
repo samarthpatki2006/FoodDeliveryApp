@@ -7,9 +7,11 @@ import { generateAccessAndRefreshTokens } from "../utils/tokens.js";
 
 const registerUser=asyncHandler(async(req,res)=>{
   const {full_name,email,password,phone,role}=req.body;
+
   const userRole=role ?? "citizen";
   const userDetails=[full_name,email,password,phone,userRole];
-  console.log(userDetails);
+
+
   userDetails.forEach((details)=>{
     if(!details || details.trim()===""){
       throw new ApiError(400,"All fields are required");
@@ -18,9 +20,10 @@ const registerUser=asyncHandler(async(req,res)=>{
 
   const [existingUser]=await db.execute('select * from users where email=? or phone=?',[email,phone]);
   if(existingUser.length>0){
-    throw new ApiError("User with given email or phone no already exists");
+    throw new ApiError(400,"User with given email or phone no already exists");
   }
-  const hashedPassword=hashPassword(password);
+
+  const hashedPassword=await hashPassword(password);
 
   const [roles]=await db.execute('select role_id from roles where role_name=?',[userRole]);
   if(roles.length===0){
@@ -28,9 +31,9 @@ const registerUser=asyncHandler(async(req,res)=>{
   }
   const role_id=roles[0].role_id;
 
-  await db.execute('insert into users (full_name,email,password_hash,phone,role_id) values(?,?,?,?,?)',[full_name,email,password,phone,role_id])
+  await db.execute('insert into users (full_name,email,password_hash,phone,role_id) values(?,?,?,?,?)',[full_name,email,hashedPassword,phone,role_id])
 
-  const [createdUser]=await db.execute('select full_name,email,phone from users where email=? and phone=?',[email,phone]);
+  const [createdUser]=await db.execute('select full_name,email,phone,created_at from users where email=? and phone=?',[email,phone]);
 
   if(createdUser.length===0){
     throw new ApiError(401,"Something went wrong while creating user");
@@ -43,33 +46,65 @@ const registerUser=asyncHandler(async(req,res)=>{
 const loginUser=asyncHandler(async (req,res)=>{
   const {email,phone,password}=req.body;
 
-  if(!email && !phone || !password){
-    throw new ApiError(400,"Email or Phone along with password required");
+  if(email || phone){
+    if(email.trim()=="" && phone.trim()==="")
+      throw new ApiError(400,"Email or Phone required");
+    if(!password || password.trim()===""){
+      throw new ApiError(400,"Invalid password");
+    }
   }
-  const [data]=await db.execute('select email,phone,full_name,password from users where user_id=?',[req.user[0].user_id]);
+  
+  let data;
+  if(phone){
+    [data]=await db.execute('select user_id,email,phone,full_name,password_hash from users where phone=?',[phone]);
+  }
+  else{
+    [data]=await db.execute('select user_id,email,phone,full_name,password_hash from users where email=?',[email]);
+  }
 
   if(data.length===0){
     throw new ApiError(400,"Invalid request");
   }
-  const isPasswordCorrect=isPasswordCorrect(data[0].password,password);
-  if(!isPasswordCorrect){
+
+  const isPasswordValid=isPasswordCorrect(password,data[0].password_hash);
+
+  if(!isPasswordValid){
     throw new ApiError(400,"Incorrect Password");
   }
-  const {refreshToken,accessToken}=generateAccessAndRefreshTokens(data[0]);
+
+  const {accessToken,refreshToken}=await generateAccessAndRefreshTokens(data[0]);
+
   const [loggedInUser]=await db.execute('select full_name,email,phone,created_at from users where user_id=?',[data[0].user_id]);
+  
   const httpOptions={
     httpOnly:true,
     secure:true
   }
-  return res.status(200).cookie("accessToken",accessToken,options).cookie("refreshToken",refreshToken,options).json(new ApiResponse(200,{accessToken,refreshToken,loggedInUser},"User logged In Successfully"));
+
+  return res.status(200)
+  .cookie("accessToken",accessToken,httpOptions)
+  .cookie("refreshToken",refreshToken,httpOptions)
+  .json(
+    new ApiResponse(
+      200,
+      {
+        user:loggedInUser,
+        accessToken:accessToken,refreshToken:refreshToken
+      },
+      "User logged In Successfully")
+  );
 })
+
+
 const logoutUser = asyncHandler(async (req, res) => {
   const [loggedOutUser] = await db.execute(`select user_id from users where user_id= ?`, [req.user[0].user_id]);
+
   if (loggedOutUser.length == 0) {
     throw new ApiError(404, "User to be logged out not found");
   }
 
   await db.execute(`update users set refresh_token=NULL where user_id=?`, [loggedOutUser[0].user_id]);
+
   const options = {
     httpOnly: true,
     secure: true
@@ -81,29 +116,32 @@ const logoutUser = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User Logged Out"))
 })
-const refreshAccessToken = asyncHandler(async (req, res) => {
 
+const refreshAccessToken = asyncHandler(async (req, res) => {
   const incommingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken
 
   if (!incommingRefreshToken) {
     throw new ApiError(401, "Unauthorized request")
   }
+
   try {
     const decodedToken = jwt.verify(incommingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
     const [user] = await db.execute('select user_id,refresh_token from users where user_id= ?', [decodedToken?.id]);
+
     if (user.length == 0) {
       throw new ApiError(401, "Invalid refresh token")
     }
-    console.log(incommingRefreshToken)
-    console.log(user[0].refresh_token)
+
     if (incommingRefreshToken !== user[0]?.refresh_token) {
       throw new ApiError(401, "Refresh Token is expired or used")
     }
+
     const options = {
       httpOnly: true,
       secure: true
     }
     const { accessToken, newrefreshToken } = await generateAccessAndRefreshTokens(user[0])
+
     return res.status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", newrefreshToken)
@@ -114,8 +152,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, error?.message || "Invalid Token")
   }
 })
+
+
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, req.user, "Current user fetched successfully"))
 })
 
-export {registerUser,loginUser,logoutUser,getCurrentUser}
+export {registerUser,loginUser,logoutUser,getCurrentUser,refreshAccessToken}

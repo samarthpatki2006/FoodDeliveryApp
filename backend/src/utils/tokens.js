@@ -2,8 +2,8 @@ import {db} from "../database/index.js";
 import jwt from "jsonwebtoken";
 import { ApiError } from "./ApiError.js";
 
-const generateAccessToken=(user)=>{
-  return jwt.sign(
+const generateAccessToken=async (user)=>{
+  return await jwt.sign(
     {
       userId:user.user_id,
       fullName:user.full_name,
@@ -15,8 +15,8 @@ const generateAccessToken=(user)=>{
     }
   )
 }
-const generateRefreshToken=(user)=>{
-  return jwt.sign(
+const generateRefreshToken=async(user)=>{
+  return await jwt.sign(
     {
       userId:user.user_id,
     },
@@ -32,14 +32,15 @@ const generateAccessAndRefreshTokens = async function (user) {
     if (!user) {
       throw new ApiError(404, "User not found")
     }
-    const accessToken = generateAccessToken(user)
-    const refreshToken = generateRefreshToken(user)
+    
+    const accessToken =await generateAccessToken(user)
+    const refreshToken =await generateRefreshToken(user)
    
     await db.execute(
       "UPDATE users SET refresh_token = ? WHERE user_id = ?",
       [refreshToken, user.user_id]
     )
-
+    
     return { accessToken, refreshToken }
 
   } catch (error) {
