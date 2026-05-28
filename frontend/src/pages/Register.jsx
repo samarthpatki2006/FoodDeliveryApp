@@ -33,7 +33,6 @@ function Register(){
       }
     }
     catch(err){
-      console.log(err);
       toast.error("Something went wrong");
     }
     setFormData({
@@ -44,6 +43,7 @@ function Register(){
       role:""
     });
   }
+  
   return(
     <div>
       <h1>Register</h1>
@@ -61,6 +61,7 @@ function Register(){
           <option value="customer">Customer</option>
           <option value="admin">Admin</option>
           <option value="owner">Owner</option>
+          <option value="delivery_partner">Delivery Partner</option>
         </select>
         <button type="submit">Register</button>
       </form>
