@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { registerUser } from "../api/auth";
+import { registerUser } from "../api/auth.api.js";
 import toast from "react-hot-toast";
 import {useNavigate} from "react-router-dom";
 function Register(){
@@ -48,15 +48,15 @@ function Register(){
     <div>
       <h1>Register</h1>
       <form onSubmit={handleOnSubmit}>
-        <input type="text" name="full_name" placeholder="Enter full name" value={formData.full_name} onChange={handleOnChange}/>
+        <input type="text" name="full_name" placeholder="Enter full name" value={formData.full_name} onChange={handleOnChange} required/>
 
-        <input type="text" name="email" placeholder="Enter email" value={formData.email} onChange={handleOnChange}/>
+        <input type="text" name="email" placeholder="Enter email" value={formData.email} onChange={handleOnChange} required/>
 
-        <input type="password" name="password" placeholder="Enter password" value={formData.password} onChange={handleOnChange}/>
+        <input type="password" name="password" placeholder="Enter password" value={formData.password} onChange={handleOnChange} required/>
 
-        <input type="text" name="phone" placeholder="Enter phone" value={formData.phone} onChange={handleOnChange}/>
+        <input type="text" name="phone" placeholder="Enter phone" value={formData.phone} onChange={handleOnChange} required/>
 
-        <select name="role" onChange={handleOnChange} value={formData.role}>
+        <select name="role" onChange={handleOnChange} value={formData.role} required>
           <option value="">Enter a role</option>
           <option value="customer">Customer</option>
           <option value="admin">Admin</option>

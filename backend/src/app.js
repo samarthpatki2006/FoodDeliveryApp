@@ -19,4 +19,8 @@ app.use("/api/v1/users",userRouter)
 import ownerRouter from "./routes/owner.routes.js";
 app.use("/api/v1/owner",ownerRouter);
 
+import  errorHandler from "./middlewares/error.middleware.js";
+
+app.use(errorHandler);
+
 export default app;

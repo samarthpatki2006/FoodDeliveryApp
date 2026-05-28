@@ -6,7 +6,7 @@ import Admin from "../pages/Admin.jsx";
 import Owner from "../pages/Owner.jsx";
 import DeliveryPartner from "../pages/DeliveryPartner.jsx";
 import Customer from "../pages/Customer.jsx";
-
+import RestaurantDetails from "../components/owner/RestaurantDetails.jsx";
 function AppRoutes(){
   return(
     <Routes>
@@ -16,6 +16,7 @@ function AppRoutes(){
 
       <Route element={<ProtectedRoute allowedRoles={["admin"]}/>}>
         <Route path="/admin" element={<Admin/>}>
+          
         </Route>
       </Route>
 
@@ -26,6 +27,7 @@ function AppRoutes(){
 
       <Route element={<ProtectedRoute allowedRoles={["owner"]}/>}>
         <Route path="/owner" element={<Owner/>}>
+          <Route path="add-restaurant-details" element={<RestaurantDetails/>}/>
         </Route>
       </Route>
 
