@@ -33,7 +33,8 @@ function RestaurantDetails() {
       }
     }
     catch (err) {
-      console.log(err.response.data);
+      const errorMsg=err.response.data.message || "Something went wrong";
+      toast.error(errorMsg)
     }
     
   }

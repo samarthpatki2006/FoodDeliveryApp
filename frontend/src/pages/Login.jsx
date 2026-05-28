@@ -35,12 +35,10 @@ function Login() {
           phone: "",
           password: "",
         });
-      } else {
-        toast.error("Login Failed");
       }
     } catch (err) {
-      console.log(err);
-      toast.error("Something went wrong");
+      const errorMsg=err.response.data.message || "Something went wrong";
+      toast.error(errorMsg);
     }
   };
 
