@@ -1,13 +1,16 @@
-import { useState } from "react";
-import { loginUser } from "../api/auth";
+import { useState,useEffect } from "react";
+import { getCurrentUser, loginUser } from "../api/auth";
+import {useAuth} from "../context/useAuth.js"
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 function Login(){
+  const {user,setUser,loading}=useAuth();
+  const navigate=useNavigate();
   const [formData,setFormData]=useState({
     email:"",
     phone:"",
     password:""
   });
-
 
   const handleOnChange=(e)=>{
     const {name,value}=e.target;
@@ -19,18 +22,20 @@ function Login(){
 
   const handleOnSubmit=async(e)=>{
     e.preventDefault();
-
     try{
       const res=await loginUser(formData);
       if(res.status<400) {
         toast.success("Login Success");
+        const user=await getCurrentUser();
+        if(user){
+          setUser(user.data.data[0]);
+        }
       }
       else {
-        toast.error("Login successfully");
+        toast.error("Login Failed");
       }
     }
     catch(err){
-      console.log(err);
       toast.error("Something went wrong");
     }
     setFormData({
@@ -39,6 +44,23 @@ function Login(){
       password:""
     })
   }
+
+  useEffect(() => {
+    if (loading) return;
+    if (user?.role_name === "admin") {
+      navigate("/admin",{replace:true});
+    } else if (user?.role_name === "owner") {
+      navigate("/owner",{replace:true});
+    } else if (user?.role_name === "customer") {
+      navigate("/customer",{replace:true});
+    }
+    else if(user?.role_name==="delivery_partner"){
+      navigate("/delivery_partner,{replace:true}");
+    }
+  }, [user, loading, navigate]);
+
+  if(loading) return <div>Loading</div>
+
   return (
     <div>
       <h1>Login</h1>
