@@ -1,9 +1,13 @@
-function App() {
-  
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./routes/AppRoutes.jsx";
+import { AuthProvider } from "./context/AuthProvider.jsx";
+function App() { 
   return (
-    <div>
-      <div>Food Delivery App</div>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes/>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 
