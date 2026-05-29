@@ -1,4 +1,4 @@
-import {Routes,Route} from "react-router-dom";
+import { Routes, Route,Navigate,Link } from "react-router-dom";
 import Login from "../pages/Login.jsx";
 import Register from "../pages/Register.jsx";
 import ProtectedRoute from "../components/ProtectedRoutes.jsx";
@@ -10,35 +10,41 @@ import RestaurantDetails from "../components/owner/RestaurantDetails.jsx";
 import LocationDetails from "../components/owner/LocationDetails.jsx";
 import OperationDetails from "../components/owner/OperationDetails.jsx";
 import BrandingDetails from "../components/owner/BrandingDetails.jsx";
-function AppRoutes(){
-  return(
+import MyRestaurants from "../components/owner/MyRestaurants.jsx";
+function AppRoutes() {
+  return (
     <Routes>
-      <Route path="/" element={<Login/>}/>
-      <Route path="/login" element={<Login/>}/>
-      <Route path="/register" element={<Register/>}/>
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
-      <Route element={<ProtectedRoute allowedRoles={["admin"]}/>}>
-        <Route path="/admin" element={<Admin/>}>
-          
+      <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+        <Route path="/admin" element={<Admin />}>
+
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["customer"]}/>}>
-        <Route path="/customer" element={<Customer/>}>
+      <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
+        <Route path="/customer" element={<Customer />}>
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["owner"]}/>}>
-        <Route path="/owner" element={<Owner/>}>
-          <Route path="add-restaurant-details" element={<RestaurantDetails/>}/>
-          <Route path="add-location-details" element={<LocationDetails/>}/>
-          <Route path="add-operation-details" element={<OperationDetails/>}/>
-          <Route path="add-branding-details" element={<BrandingDetails/>}/>
+      <Route element={<ProtectedRoute allowedRoles={["owner"]} />}>
+        <Route path="/owner/setup">
+          <Route index element={<Navigate to="add-restaurant-details" replace/>}/>
+          <Route path="add-restaurant-details" element={<RestaurantDetails />}/>
+          <Route path="add-location-details" element={<LocationDetails />}/>
+          <Route path="add-operation-details" element={<OperationDetails />}/>
+          <Route path="add-branding-details" element={<BrandingDetails />}/>
+        </Route>
+
+        <Route path="/owner" element={<Owner />}>
+          <Route path="get-my-restaurants" element={<MyRestaurants />}/>
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={["delivery_partner"]}/>}>
-        <Route path="/delivery_partner" element={<DeliveryPartner/>}>
+      <Route element={<ProtectedRoute allowedRoles={["delivery_partner"]} />}>
+        <Route path="/delivery_partner" element={<DeliveryPartner />}>
         </Route>
       </Route>
     </Routes>
