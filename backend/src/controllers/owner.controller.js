@@ -38,17 +38,20 @@ const addLocationDetails = asyncHandler(async (req, res) => {
   if (req.user[0].role_name !== 'owner') {
     throw new ApiError(401, "Unauthorized Request");
   }
-  const { address_line, city, state, pincode } = req.body;
+  const { address_line, city, state, pincode,latitude,longitude } = req.body;
   const { restaurant_id } = req.params;
 
-  const details = [address_line, city, state, pincode, restaurant_id]
+  if(!latitude || !longitude){
+    throw new ApiError(400,"Latitude and longitude details are required");
+  }
+  const details = [address_line, city, state, pincode, restaurant_id,latitude,longitude]
   details.forEach((detail) => {
-    if (!detail || detail.trim() === "") {
+    if (!detail || typeof detail==="string" && detail.trim() === "") {
       throw new ApiError(400, "All the details are required");
     }
   })
 
-  const [result] = await db.execute('update restaurants set address_line=?,city=?,state=?,pincode=? where restaurant_id=? and owner_id=?', [address_line, city, state, pincode, restaurant_id, req.user[0].user_id])
+  const [result] = await db.execute('update restaurants set address_line=?,city=?,state=?,pincode=?,latitude=?,longitude=? where restaurant_id=? and owner_id=?', [address_line, city, state, pincode,latitude,longitude, restaurant_id, req.user[0].user_id])
 
   if (result.affectedRows === 0) {
     throw new ApiError(
@@ -57,9 +60,9 @@ const addLocationDetails = asyncHandler(async (req, res) => {
     );
   }
 
-  const [updatedRestaurant] = await db.execute('select address_line,city,state,pincode from restaurants where restaurant_id=?', [restaurant_id]);
+  const [updatedRestaurant] = await db.execute('select address_line,city,state,pincode,latitude,longitude from restaurants where restaurant_id=?', [restaurant_id]);
 
-  const updatedDetails = [updatedRestaurant[0].address_line, updatedRestaurant[0].city, updatedRestaurant[0].state, updatedRestaurant[0].pincode]
+  const updatedDetails = [updatedRestaurant[0].address_line, updatedRestaurant[0].city, updatedRestaurant[0].state, updatedRestaurant[0].pincode,updatedRestaurant[0].latitude,updatedRestaurant[0].longitude]
 
   updatedDetails.forEach((detail) => {
     if (!detail || detail.trim() === "") {

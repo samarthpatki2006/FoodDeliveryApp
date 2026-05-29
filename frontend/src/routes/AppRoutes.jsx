@@ -7,6 +7,7 @@ import Owner from "../pages/Owner.jsx";
 import DeliveryPartner from "../pages/DeliveryPartner.jsx";
 import Customer from "../pages/Customer.jsx";
 import RestaurantDetails from "../components/owner/RestaurantDetails.jsx";
+import LocationDetails from "../components/owner/LocationDetails.jsx";
 function AppRoutes(){
   return(
     <Routes>
@@ -28,6 +29,7 @@ function AppRoutes(){
       <Route element={<ProtectedRoute allowedRoles={["owner"]}/>}>
         <Route path="/owner" element={<Owner/>}>
           <Route path="add-restaurant-details" element={<RestaurantDetails/>}/>
+          <Route path="add-location-details" element={<LocationDetails/>}/>
         </Route>
       </Route>
 
