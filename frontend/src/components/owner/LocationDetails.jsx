@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { addLocationDetails, getMyRestaurants } from "../../api/owner.api";
 import toast from "react-hot-toast";
 
@@ -14,7 +14,7 @@ function LocationDetails() {
     latitude: "",
     longitude: "",
   });
-  const [restaurants,setRestaurants]=useState([]);
+  const [restaurants, setRestaurants] = useState([]);
 
   const handleOnChange = (e) => {
     const { name, value } = e.target;
@@ -24,24 +24,26 @@ function LocationDetails() {
     }));
   };
 
-
-  const handleOnSubmit = async(e) => {
+  const handleOnSubmit = async (e) => {
     e.preventDefault();
 
-    try{
-      const response=await addLocationDetails(restaurantId,{...formData,...location});
-      if(response.status<300){
+    try {
+      const response = await addLocationDetails(restaurantId, {
+        ...formData,
+        ...location,
+      });
+      if (response.status < 300) {
         toast.success("Location details updated successfully");
       }
-    }
-    catch(err){
-      const errorMsg=err.response.data.message || "Failed to update location details";
+    } catch (err) {
+      const errorMsg =
+        err?.response?.data?.message || "Failed to update location details";
       toast.error(errorMsg);
     }
   };
 
   const getLocation = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported");
       return;
@@ -61,24 +63,29 @@ function LocationDetails() {
     );
   };
 
-  useEffect(()=>{
-    const getRestaurants=async()=>{
-      try{
-        const response=await getMyRestaurants();
+  useEffect(() => {
+    const getRestaurants = async () => {
+      try {
+        const response = await getMyRestaurants();
         setRestaurants(response.data.data);
-      }
-      catch(err){
+        setFormData({
+          address_line: "",
+          state: "",
+          city: "",
+          pincode: "",
+        });
+      } catch (err) {
         console.log(err.response.data.message);
         setRestaurants(null);
       }
-    }
+    };
     getRestaurants();
-  },[])
+  }, []);
 
-  const handleSelectRestaurant=(e)=>{
-    const {value}=e.target;
+  const handleSelectRestaurant = (e) => {
+    const { value } = e.target;
     setRestaurantId(value);
-  }
+  };
   return (
     <div>
       <form onSubmit={handleOnSubmit}>
@@ -114,15 +121,20 @@ function LocationDetails() {
           onChange={handleOnChange}
           required
         />
-        <select required name={restaurantId} value={restaurantId} onChange={handleSelectRestaurant}>
+        <select
+          required
+          name="restaurantId"
+          value={restaurantId}
+          onChange={handleSelectRestaurant}
+        >
           <option value="">Choose an restaurant</option>
-          {restaurants.map((res)=>(
-            <option value={res.restaurant_id} key={res.restaurant_id}>{res.restaurant_name}</option>
+          {restaurants.map((res) => (
+            <option value={res.restaurant_id} key={res.restaurant_id}>
+              {res.restaurant_name}
+            </option>
           ))}
         </select>
-        <button onClick={getLocation}>
-          Fetch latitude and longitude
-        </button>
+        <button onClick={getLocation}>Fetch latitude and longitude</button>
         <p></p>
         <button type="submit">Add Details</button>
       </form>

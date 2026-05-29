@@ -8,6 +8,8 @@ import DeliveryPartner from "../pages/DeliveryPartner.jsx";
 import Customer from "../pages/Customer.jsx";
 import RestaurantDetails from "../components/owner/RestaurantDetails.jsx";
 import LocationDetails from "../components/owner/LocationDetails.jsx";
+import OperationDetails from "../components/owner/OperationDetails.jsx";
+import BrandingDetails from "../components/owner/BrandingDetails.jsx";
 function AppRoutes(){
   return(
     <Routes>
@@ -30,6 +32,8 @@ function AppRoutes(){
         <Route path="/owner" element={<Owner/>}>
           <Route path="add-restaurant-details" element={<RestaurantDetails/>}/>
           <Route path="add-location-details" element={<LocationDetails/>}/>
+          <Route path="add-operation-details" element={<OperationDetails/>}/>
+          <Route path="add-branding-details" element={<BrandingDetails/>}/>
         </Route>
       </Route>
 

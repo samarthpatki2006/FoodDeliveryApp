@@ -37,7 +37,7 @@ function Login() {
         });
       }
     } catch (err) {
-      const errorMsg=err.response.data.message || "Something went wrong";
+      const errorMsg=err?.response?.data?.message || "Something went wrong";
       toast.error(errorMsg);
     }
   };
