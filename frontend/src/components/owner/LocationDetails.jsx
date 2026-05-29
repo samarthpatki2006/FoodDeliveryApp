@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { addLocationDetails, getMyRestaurants } from "../../api/owner.api";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, replace } from "react-router-dom";
 
 function LocationDetails() {
   const [formData, setFormData] = useState({
@@ -38,7 +38,7 @@ function LocationDetails() {
       });
       if (response.status < 300) {
         toast.success("Location details updated successfully");
-        navigate(nextRoute);
+        navigate(nextRoute,{replace:true});
       }
     } catch (err) {
       const errorMsg =

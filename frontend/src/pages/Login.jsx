@@ -41,16 +41,16 @@ function Login() {
         });
 
         if(user.role_name==="owner"){
-          navigate("/owner");
+          navigate("/owner",{replace:true});
         }
         else if(user.role_name==="customer"){
-          navigate("/customer");
+          navigate("/customer",{replace:true});
         }
         else if(user.role_name==="delivery_partner"){
-          navigate("/delivery_partner");
+          navigate("/delivery_partner",{replace:true});
         }
         else if(user.role_name==="admin"){
-          navigate("/admin");
+          navigate("/admin",{replace:true});
         }
         else{
           toast.error("Navigation Failed");

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { getMyRestaurants, addBrandingDetails } from "../../api/owner.api";
-import {Link} from "react-router-dom";
+import {Link, replace} from "react-router-dom";
 function BrandingDetails() {
   const [formData, setFormData] = useState({
     banner: null,
@@ -54,7 +54,7 @@ function BrandingDetails() {
     } finally {
       setIsUploading(false);
     }
-    navigate("/owner");
+    navigate("/owner",{replace:true});
   };
 
   const handleOnChange = (e) => {

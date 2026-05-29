@@ -27,10 +27,10 @@ function Register() {
       if (res.status < 400) {
         toast.success("Register successfully");
         if(formData.role==="owner"){
-          navigate("/owner/setup");
+          navigate("/owner/setup",{replace:true});
         }
         else{
-          navigate("/login");
+          navigate("/login",{replace:true});
         }
         setFormData({
           full_name: "",

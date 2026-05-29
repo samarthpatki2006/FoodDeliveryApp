@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { addRestaurantDetails } from "../../api/owner.api.js";
 import toast from "react-hot-toast";
+import { replace } from "react-router-dom";
 function RestaurantDetails() {
   const [formData, setFormData] = useState({
     restaurant_name: "",
@@ -29,7 +30,7 @@ function RestaurantDetails() {
           phone: "",
           description: "",
         });
-        navigate(nextRoute);
+        navigate(nextRoute,{replace:true});
       }
     } catch (err) {
       const errorMsg = err?.response?.data?.message || "Something went wrong";

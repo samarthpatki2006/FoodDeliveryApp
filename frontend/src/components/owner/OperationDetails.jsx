@@ -33,7 +33,7 @@ function OperationDetails() {
           closing_time: "",
         });
         setRestaurantId("");
-        navigate(nextRoute);
+        navigate(nextRoute,{replace:true});
       }
     } catch (err) {
       const errMsg =
