@@ -20,3 +20,7 @@ export const addBrandingDetails=(restaurant_id,data)=>{
   return API.post(`/owner/add-branding-details/${restaurant_id}`,data);
 }
 
+export const getMyRestaurantImages=(restaurant_id)=>{
+  return API.get(`/owner/get-restaurant-images/${restaurant_id}`)
+}
+
