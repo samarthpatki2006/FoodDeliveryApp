@@ -39,22 +39,6 @@ function Login() {
           phone: "",
           password: "",
         });
-
-        if(user.role_name==="owner"){
-          navigate("/owner",{replace:true});
-        }
-        else if(user.role_name==="customer"){
-          navigate("/customer",{replace:true});
-        }
-        else if(user.role_name==="delivery_partner"){
-          navigate("/delivery_partner",{replace:true});
-        }
-        else if(user.role_name==="admin"){
-          navigate("/admin",{replace:true});
-        }
-        else{
-          toast.error("Navigation Failed");
-        }
       }
     } catch (err) {
       const errorMsg = err?.response?.data?.message || "Something went wrong";
@@ -65,13 +49,13 @@ function Login() {
   useEffect(() => {
     if (loading) return;
     if (user?.role_name === "admin") {
-      navigate("/admin", { replace: true });
+      navigate("/admin/dashboard", { replace: true });
     } else if (user?.role_name === "owner") {
-      navigate("/owner", { replace: true });
+      navigate("/owner/dashboard", { replace: true });
     } else if (user?.role_name === "customer") {
-      navigate("/customer", { replace: true });
+      navigate("/customer/dashboard", { replace: true });
     } else if (user?.role_name === "delivery_partner") {
-      navigate("/delivery_partner,{replace:true}");
+      navigate("/delivery_partner/dashboard",{replace:true});
     }
   }, [user, loading, navigate]);
 

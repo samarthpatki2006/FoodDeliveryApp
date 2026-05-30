@@ -11,6 +11,8 @@ import LocationDetails from "../components/owner/LocationDetails.jsx";
 import OperationDetails from "../components/owner/OperationDetails.jsx";
 import BrandingDetails from "../components/owner/BrandingDetails.jsx";
 import MyRestaurants from "../components/owner/MyRestaurants.jsx";
+import AdminDashboard from "../components/admin/AdminDashboard.jsx";
+import OwnerDashboard from "../components/owner/OwnerDashboard.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -20,7 +22,7 @@ function AppRoutes() {
 
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
         <Route path="/admin" element={<Admin />}>
-
+          <Route path="dashboard" element={<AdminDashboard/>}/>
         </Route>
       </Route>
 
@@ -39,6 +41,7 @@ function AppRoutes() {
         </Route>
 
         <Route path="/owner" element={<Owner />}>
+          <Route path="dashboard" element={<OwnerDashboard/>}/>
           <Route path="get-my-restaurants" element={<MyRestaurants />}/>
         </Route>
       </Route>
