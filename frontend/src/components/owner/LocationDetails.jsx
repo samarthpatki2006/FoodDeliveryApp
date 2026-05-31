@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { addLocationDetails, getMyRestaurants } from "../../api/owner.api";
 import toast from "react-hot-toast";
-import { Link, replace } from "react-router-dom";
+import { Link, replace, useNavigate } from "react-router-dom";
 
 function LocationDetails() {
+  const navigate=useNavigate();
   const [formData, setFormData] = useState({
     address_line: "",
     state: "",
@@ -26,10 +27,7 @@ function LocationDetails() {
     }));
   };
 
-  const handleOnSubmit = async (
-    e,
-    nextRoute = "/owner/setup/add-operation-details",
-  ) => {
+  const handleOnSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await addLocationDetails(restaurantId, {
@@ -38,7 +36,7 @@ function LocationDetails() {
       });
       if (response.status < 300) {
         toast.success("Location details updated successfully");
-        navigate(nextRoute,{replace:true});
+        navigate("/owner/add-operation-details",{replace:true});
       }
     } catch (err) {
       const errorMsg =
@@ -268,87 +266,8 @@ function LocationDetails() {
                 >
                   Save & Continue
                 </button>
-
-                <button
-                  type="button"
-                  onClick={(e) => handleOnSubmit(e, "/owner")}
-                  className="flex-1 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 rounded-xl transition"
-                >
-                  Save and Finish Next Steps Later
-                </button>
-              </div>
-              <div className="flex justify-center pt-2">
-                <Link
-                  to="/owner"
-                  className="text-sm font-medium text-gray-500 hover:text-orange-500 transition-colors duration-200 underline-offset-4 hover:underline"
-                >
-                  Skip setup and go to dashboard
-                </Link>
               </div>
             </form>
-          </div>
-
-          {/* Setup Progress */}
-          <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-8 h-fit">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">
-              Setup Progress
-            </h2>
-
-            <div className="space-y-5">
-              <div className="flex items-start gap-4">
-                <div className="h-9 w-9 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-medium">
-                  ✓
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-gray-900">
-                    Restaurant Details
-                  </h3>
-
-                  <p className="text-sm text-gray-500">Completed</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="h-9 w-9 rounded-full bg-orange-500 text-white flex items-center justify-center font-medium">
-                  2
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-gray-900">
-                    Location Details
-                  </h3>
-
-                  <p className="text-sm text-gray-500">Current step</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 opacity-80">
-                <div className="h-9 w-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-medium">
-                  3
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-gray-900">
-                    Operation Details
-                  </h3>
-
-                  <p className="text-sm text-gray-500">
-                    Add timings & availability
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 opacity-80">
-                <div className="h-9 w-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-medium">
-                  4
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Branding</h3>
-                  <p className="text-sm text-gray-500">Upload logo & banner</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

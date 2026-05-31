@@ -26,12 +26,7 @@ function Register() {
       const res = await registerUser(formData);
       if (res.status < 400) {
         toast.success("Register successfully");
-        if(formData.role==="owner"){
-          navigate("/owner/setup",{replace:true});
-        }
-        else{
-          navigate("/login",{replace:true});
-        }
+        navigate("/login",{replace:true});
         setFormData({
           full_name: "",
           email: "",

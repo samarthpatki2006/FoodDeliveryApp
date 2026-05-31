@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { getMyRestaurants, addBrandingDetails } from "../../api/owner.api";
-import {Link, replace} from "react-router-dom";
+import {Link, replace, useNavigate} from "react-router-dom";
 function BrandingDetails() {
+  const navigate=useNavigate()
   const [formData, setFormData] = useState({
     banner: null,
     logo: null,
@@ -54,7 +55,6 @@ function BrandingDetails() {
     } finally {
       setIsUploading(false);
     }
-    navigate("/owner",{replace:true});
   };
 
   const handleOnChange = (e) => {
@@ -67,7 +67,7 @@ function BrandingDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-white px-4 py-10">
+    <div className="min-h-screen bg-white px-4 py-0">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -174,15 +174,6 @@ function BrandingDetails() {
                   </p>
                 )}
               </div>
-
-              {/* Info Box */}
-              <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4">
-                <p className="text-sm text-orange-700">
-                  Branding is optional for now. You can always update your logo
-                  and banner later from the dashboard.
-                </p>
-              </div>
-
               {/* Submit Button */}
               <button
                 type="submit"
@@ -200,85 +191,7 @@ function BrandingDetails() {
 
                 {isUploading ? "Uploading..." : "Finish Setup"}
               </button>
-              <div className="flex justify-center pt-2">
-                <Link
-                  to="/owner"
-                  className="text-sm font-medium text-gray-500 hover:text-orange-500 transition-colors duration-200 underline-offset-4 hover:underline"
-                >
-                  Skip setup and go to dashboard
-                </Link>
-              </div>
             </form>
-          </div>
-
-          {/* Setup Progress */}
-          <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-8 h-fit">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">
-              Setup Progress
-            </h2>
-
-            <div className="space-y-5">
-              <div className="flex items-start gap-4">
-                <div className="h-9 w-9 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-medium">
-                  ✓
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-gray-900">
-                    Restaurant Details
-                  </h3>
-
-                  <p className="text-sm text-gray-500">Completed</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="h-9 w-9 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-medium">
-                  ✓
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-gray-900">
-                    Location Details
-                  </h3>
-
-                  <p className="text-sm text-gray-500">Completed</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="h-9 w-9 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-medium">
-                  ✓
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-gray-900">
-                    Operation Details
-                  </h3>
-
-                  <p className="text-sm text-gray-500">Completed</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="h-9 w-9 rounded-full bg-orange-500 text-white flex items-center justify-center font-medium">
-                  4
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-gray-900">Branding</h3>
-
-                  <p className="text-sm text-gray-500">Final step</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 bg-green-50 border border-green-100 rounded-2xl p-4">
-              <p className="text-sm text-green-700">
-                You're almost done. Complete branding to finish your restaurant
-                setup.
-              </p>
-            </div>
           </div>
         </div>
       </div>

@@ -1,11 +1,12 @@
 import { Outlet, Navigate } from "react-router-dom";
 import Sidebar from "../components/layout/Sidebar.jsx";
 import { useAuth } from "../context/useAuth";
-import {LayoutDashboard,Building2} from "lucide-react";
+import {LayoutDashboard,Building2, Plus} from "lucide-react";
 
 const adminNavItems = [
     { to: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    {to:"/owner/get-my-restaurants" ,label:"My Restaurants",icon:Building2}
+    {to:"/owner/get-my-restaurants" ,label:"My Restaurants",icon:Building2},
+    {to:"/owner/add-restaurant-details",label:"Add Restaurant",icon:Plus}
 ];
 
 const OwnerLayout = () => {

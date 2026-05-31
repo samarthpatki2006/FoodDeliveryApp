@@ -32,17 +32,13 @@ function AppRoutes() {
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={["owner"]} />}>
-        <Route path="/owner/setup">
-          <Route index element={<Navigate to="add-restaurant-details" replace/>}/>
+        <Route path="/owner" element={<Owner />}>
+          <Route path="dashboard" element={<OwnerDashboard/>}/>
+          <Route path="get-my-restaurants" element={<MyRestaurants />}/>
           <Route path="add-restaurant-details" element={<RestaurantDetails />}/>
           <Route path="add-location-details" element={<LocationDetails />}/>
           <Route path="add-operation-details" element={<OperationDetails />}/>
           <Route path="add-branding-details" element={<BrandingDetails />}/>
-        </Route>
-
-        <Route path="/owner" element={<Owner />}>
-          <Route path="dashboard" element={<OwnerDashboard/>}/>
-          <Route path="get-my-restaurants" element={<MyRestaurants />}/>
         </Route>
       </Route>
 
