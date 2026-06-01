@@ -13,6 +13,8 @@ import BrandingDetails from "../components/owner/BrandingDetails.jsx";
 import MyRestaurants from "../components/owner/MyRestaurants.jsx";
 import AdminDashboard from "../components/admin/AdminDashboard.jsx";
 import OwnerDashboard from "../components/owner/OwnerDashboard.jsx";
+import ManageCuisines from "../components/owner/ManageCuisines.jsx";
+import ManageMenu from "../components/owner/ManageMenu.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -39,6 +41,8 @@ function AppRoutes() {
           <Route path="add-location-details" element={<LocationDetails />}/>
           <Route path="add-operation-details" element={<OperationDetails />}/>
           <Route path="add-branding-details" element={<BrandingDetails />}/>
+          <Route path="manage-cuisines" element={<ManageCuisines/>}/>
+          <Route path="manage-menu" element={<ManageMenu/>}/>
         </Route>
       </Route>
 

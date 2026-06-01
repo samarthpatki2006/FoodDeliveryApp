@@ -24,3 +24,15 @@ export const getMyRestaurantImages=(restaurant_id)=>{
   return API.get(`/owner/get-restaurant-images/${restaurant_id}`)
 }
 
+export const getAllCuisines=()=>{
+  return API.get(`/owner/get-all-cuisines`);
+}
+export const getAllCategories=()=>{
+  return API.get(`/owner/get-all-categories`);
+}
+export const addRestaurantCuisine=(cuisine_id,restaurant_id)=>{
+  return API.post(`/owner/add-restaurant-cuisines/${restaurant_id}`,cuisine_id);
+}
+export const addMenuItem=(restaurant_id,formData)=>{
+  return API.post(`/owner/add-menu-items/${restaurant_id}`,formData);
+}
