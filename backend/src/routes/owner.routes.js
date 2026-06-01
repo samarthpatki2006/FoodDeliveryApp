@@ -1,5 +1,5 @@
 import {Router} from "express";
-import { addRestaurantDetails,addLocationDetails,addOperationDetails,addBrandingDetails,getMyRestaurants,getRestaurantImages,addRestaurantCuisines,addMenuItems,updateMenuItems} from "../controllers/owner.controller.js";
+import { addRestaurantDetails,addLocationDetails,addOperationDetails,addBrandingDetails,getMyRestaurants,getRestaurantImages,addRestaurantCuisines,addMenuItems, getAllCuisines,getAllCategories} from "../controllers/owner.controller.js";
 import {verifyJWT} from "../middlewares/auth.middleware.js";
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -13,6 +13,6 @@ router.route("/get-restaurant-images/:restaurant_id").get(verifyJWT,getRestauran
 
 router.route("/add-restaurant-cuisines/:restaurant_id").post(verifyJWT,addRestaurantCuisines);
 router.route("/add-menu-items/:restaurant_id").post(verifyJWT,upload.fields([{name:"menu_image",maxCount:1}]),addMenuItems);
-router.route("/update-menu-items/:restaurant_id/:menu_item_id").patch(verifyJWT,upload.fields([{name:"image_url",maxCount:1}]),updateMenuItems);
-
+router.route("/get-all-cuisines").get(verifyJWT,getAllCuisines);
+router.route("/get-all-categories").get(verifyJWT,getAllCategories);
 export default router;

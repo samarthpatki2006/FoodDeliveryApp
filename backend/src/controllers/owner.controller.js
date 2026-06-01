@@ -220,9 +220,9 @@ const addMenuItems = asyncHandler(async (req, res) => {
   if (req.user[0].role_name !== 'owner') {
     throw new ApiError(401, "Unauthorized Request");
   }
+  
   const { restaurant_id } = req.params;
   const { category_id, cuisine_id, item_name, description, price, is_veg } = req.body;
- 
   const imageLocalPath=req?.files?.menu_image[0]?.path;
 
   const [data] = await db.execute('select owner_id from restaurants where restaurant_id=?', [restaurant_id]);
@@ -260,120 +260,29 @@ const addMenuItems = asyncHandler(async (req, res) => {
   return res.status(201).json(new ApiResponse(201, {insertedItem,menuImage}, "Item inserted successfully"));
 })
 
-const updateMenuItems = asyncHandler(async (req, res) => {
-  if (req.user[0].role_name !== "owner") {
-    throw new ApiError(403, "Unauthorized request");
+const getAllCuisines=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!="owner"){
+    throw new ApiError(403,"Unauthorized request");
   }
 
-  const { restaurant_id,menu_item_id } = req.params;
-  let imageLocalPath;
-  if(req.files && req.files.menuImage){
-    imageLocalPath=req?.files?.menu_image[0]?.path;
+  const [rows]=await db.execute("select * from cuisines");
+
+  if(rows.length===0){
+    throw new ApiError(400,"No cuisines found");
   }
-  
+  res.status(200).json(new ApiResponse(200,rows,"All cuisines fetched"));
+})
 
-  if (!menu_item_id) {
-    throw new ApiError(400, "menu item id is required");
+const getAllCategories=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="owner"){
+    throw new ApiError(403,"Unauthorized request");
   }
+  const [rows]=await db.execute("select * from categories");
 
-  const [restaurant] = await db.execute(
-    'select owner_id from restaurants where restaurant_id=?',
-    [restaurant_id]
-  );
-
-  if (
-    restaurant.length === 0 ||
-    restaurant[0].owner_id !== req.user[0].user_id
-  ) {
-    throw new ApiError(403, "Unauthorized request");
+  if(rows.length===0){
+    throw new ApiError(400,"No categories found");
   }
 
-  const [menuItem] = await db.execute(
-    'select menu_item_id from menu_items where menu_item_id=? and restaurant_id=? and deleted_at is null',
-    [menu_item_id, restaurant_id]
-  );
-
-  if (menuItem.length === 0) {
-    throw new ApiError(404, "Menu item not found");
-  }
-
-  const allowedFields = [
-    "item_name",
-    "description",
-    "price",
-    "category_id",
-    "cuisine_id",
-    "is_available",
-    "is_veg"
-  ];
-
-  const updates = [];
-  const values = [];
-
-  for (const field of allowedFields) {
-    if (req.body[field] !== undefined) {
-      if (field === "price") {
-        const price = Number(req.body.price);
-        if (isNaN(price) || price <= 0) {
-          throw new ApiError(400, "Invalid price");
-        }
-
-        updates.push(`${field}=?`);
-        values.push(price);
-        if (field === "is_veg" || field === "is_available") {
-          const value = req.body[field];
-
-          if (![true, false, "true", "false", 1, 0, "1", "0"].includes(value)) {
-            throw new ApiError(400, `Invalid ${field}`);
-          }
-
-          updates.push(`${field}=?`);
-          values.push(value === true || value === "true" || value === 1 || value === "1" ? 1 : 0);
-        }
-      } else {
-        updates.push(`${field}=?`);
-        values.push(req.body[field]);
-      }
-    }
-  }
-
-  if (updates.length === 0) {
-    throw new ApiError(400, "No fields to update");
-  }
-
-  // prevent accidental duplicate names
-  if (req.body.item_name) {
-    const [existingItem] = await db.execute(
-      'select menu_item_id from menu_items where restaurant_id=? and lower(item_name)=lower(?) and menu_item_id!=? and deleted_at is null',
-      [restaurant_id, req.body.item_name, menu_item_id]
-    );
-
-    if (existingItem.length > 0) {
-      throw new ApiError(400, "Menu item already exists");
-    }
-  }
-
-  values.push(menu_item_id);
-
-  await db.execute(
-    `update menu_items set ${updates.join(", ")}, updated_at=now() where menu_item_id=?`,
-    values
-  );
-
-  const imageUrl=imageLocalPath ?? await uploadOnCloudinary(imageLocalPath);
-
-  if(imageUrl){
-    await db.execute('update menu_item_images set image_url=? where menu_item_id=?',[imageUrl,menu_item_id]);
-  }
-
-  const [menuImage]=await db.execute('select image_url from menu_item_images where menu_item_id=?',[menu_item_id]);
-
-  if(menuImage.length===0 && imageLocalPath){
-    throw new ApiError(400,"Something went wrong while inserting image");
-  }
-
-  return res.status(200).json(
-    new ApiResponse(200, null, "Menu item updated successfully")
-  );
-});
-export { addRestaurantDetails, addLocationDetails, addOperationDetails, addBrandingDetails, getMyRestaurants, getRestaurantImages, addRestaurantCuisines,addMenuItems,updateMenuItems };
+  res.status(200).json(new ApiResponse(200,rows,"Categories fetched successfully"));
+})
+export { addRestaurantDetails, addLocationDetails, addOperationDetails, addBrandingDetails, getMyRestaurants, getRestaurantImages, addRestaurantCuisines,addMenuItems,getAllCuisines,getAllCategories };
