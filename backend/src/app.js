@@ -20,6 +20,9 @@ app.use("/api/v1/users",userRouter)
 import ownerRouter from "./routes/owner.routes.js";
 app.use("/api/v1/owner",ownerRouter);
 
+import customerRouter from "./routes/customer.routes.js"
+app.use("/api/v1/customer",customerRouter);
+
 import  errorHandler from "./middlewares/error.middleware.js";
 app.use(errorHandler);
 
