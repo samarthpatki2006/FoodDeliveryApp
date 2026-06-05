@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { addAddressDetails, addItemToCart, deleteCart, deleteCartItem, getMyOrders, getMyPaymentHistory, getRestaurantsInMyCity, placeOrder, placeOrderFromCart, updateCartQuantity } from "../controllers/customer.controller.js";
+import { addAddressDetails, addItemToCart, addReview, deleteCart, deleteCartItem, getMenuItems, getMyOrders, getMyPaymentHistory, getRestaurantsInMyCity, placeOrder, placeOrderFromCart, updateCartQuantity } from "../controllers/customer.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router=Router();
@@ -13,5 +13,7 @@ router.route("/delete-cart-item").delete(verifyJWT,deleteCartItem);
 router.route("/delete-cart").delete(verifyJWT,deleteCart);
 router.route("/place-order-cart").post(verifyJWT,placeOrderFromCart);
 router.route("/place-order").post(verifyJWT,placeOrder);
+router.route("/get-menu-items").get(verifyJWT,getMenuItems)
+router.route("/give-review").post(verifyJWT,addReview);
 
 export default router;
