@@ -15,6 +15,8 @@ import AdminDashboard from "../components/admin/AdminDashboard.jsx";
 import OwnerDashboard from "../components/owner/OwnerDashboard.jsx";
 import ManageCuisines from "../components/owner/ManageCuisines.jsx";
 import ManageMenu from "../components/owner/ManageMenu.jsx";
+import Address from "../components/customer/Address.jsx";
+import CustomerDashboard from "../components/customer/CustomerDashboard.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -30,6 +32,8 @@ function AppRoutes() {
 
       <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
         <Route path="/customer" element={<Customer />}>
+          <Route path="dashboard" element={<CustomerDashboard/>}/>
+          <Route path="address" element={<Address/>}/>
         </Route>
       </Route>
 

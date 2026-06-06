@@ -90,10 +90,14 @@ const getRestaurantsInMyCity = asyncHandler(async (req, res) => {
   const { address_id } = req.query;
   let restaurants;
   if (!address_id) {
-    [restaurants] = await db.execute(
-      "select * from restaurants where lower(city)=lower(?) order by rating_avg desc;",
-      [req.user[0].city]
-    );
+    const [possibleAddresses]=await db.execute("select label,city from addresses where user_id=?",[req.user[0].user_id]);
+    if(possibleAddresses.length===0){
+      [restaurants]=await db.execute("select * from restaurants order by rating desc limit 5");
+    }
+    else{
+      [restaurants] = await db.execute(
+      "select * from restaurants where lower(city) in (select lower(city) from addresses where user_id=? ) order by rating_avg desc;",[req.user[0].user_id]);
+    }
   }
   else {
     const [rows] = await db.execute("select city from addresses where address_id=?;", [address_id]);
@@ -554,4 +558,14 @@ const addReview=asyncHandler(async(req,res)=>{
 
   res.status(201).json(new ApiResponse(200,{},"Review added successfully"));
 })
-export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview };
+
+const getMyAddresses=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="customer"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+  const [data]=await db.execute("select * from addresses where user_id=?",[req.user[0].user_id]);
+
+  res.status(200).json(new ApiResponse(200,data,data.length===0?"No addresses found":"Addresses fetched successfully"));
+
+})
+export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getMyAddresses };
