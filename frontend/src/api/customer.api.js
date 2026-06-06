@@ -7,3 +7,7 @@ export const addAddressDetails=(data)=>{
 export const getAddresses=()=>{
   return API.get("/customer/get-my-addresses");
 }
+
+export const getRestaurants=()=>{
+  return API.get("/customer/get-restaurants");
+}

@@ -3,12 +3,19 @@ import Sidebar from "../components/layout/Sidebar.jsx";
 import { useAuth } from "../context/useAuth";
 import {
   Home,
+  IndianRupee,
   LayoutDashboard,
+  ListOrderedIcon,
+  ShoppingBasket,
+  ShoppingCart,
 } from "lucide-react";
 
 const adminNavItems = [
   {to:"/customer/dashboard",label:"Dashboard",icon:LayoutDashboard},
   { to: "/customer/address", label: "Address", icon: Home },
+  {to:"/customer/orders",label:"My Orders",icon:ListOrderedIcon},
+  {to:"/customer/payments",label:"My Payments",icon:IndianRupee},
+  {to:"/customer/cart",label:"Cart",icon:ShoppingCart},
 ];
 
 const CustomerLayout = () => {
@@ -33,7 +40,7 @@ const CustomerLayout = () => {
         userName={user.name}
       />
 
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
           <Outlet />
         </div>

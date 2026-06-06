@@ -17,6 +17,10 @@ import ManageCuisines from "../components/owner/ManageCuisines.jsx";
 import ManageMenu from "../components/owner/ManageMenu.jsx";
 import Address from "../components/customer/Address.jsx";
 import CustomerDashboard from "../components/customer/CustomerDashboard.jsx";
+import Cart from "../components/customer/Cart.jsx";
+import Payments from "../components/customer/Payments.jsx";
+import Orders from "../components/customer/Orders.jsx";
+import Checkout from "../components/customer/Checkout.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -34,6 +38,10 @@ function AppRoutes() {
         <Route path="/customer" element={<Customer />}>
           <Route path="dashboard" element={<CustomerDashboard/>}/>
           <Route path="address" element={<Address/>}/>
+          <Route path="cart" element={<Cart/>}/>
+          <Route path="payments" element={<Payments/>}/>
+          <Route path="orders" element={<Orders/>}/>
+          <Route path="checkout" element={<Checkout/>}/>
         </Route>
       </Route>
 

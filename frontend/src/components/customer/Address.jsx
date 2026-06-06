@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Pencil } from "lucide-react";
 import { addAddressDetails, getAddresses } from "../../api/customer.api";
+import getLiveLocation from "../../utils/location";
 
 export const Address = () => {
   const [formData, setFormData] = useState({
@@ -76,33 +77,35 @@ export const Address = () => {
       toast.error(errMsg);
     }
   };
+  const fetchLiveLocation=(e)=>{
+    getLiveLocation(e,setIsFetching,setLocation);
+  }
+  // const getLocation = (e) => {
+  //   e.preventDefault();
 
-  const getLocation = (e) => {
-    e.preventDefault();
+  //   if (!navigator.geolocation) {
+  //     toast.error("Geolocation is not supported");
+  //     return;
+  //   }
 
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported");
-      return;
-    }
+  //   setIsFetching(true);
 
-    setIsFetching(true);
+  //   navigator.geolocation.getCurrentPosition(
+  //     (position) => {
+  //       setLocation({
+  //         latitude: position.coords.latitude,
+  //         longitude: position.coords.longitude,
+  //       });
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-
-        setIsFetching(false);
-        toast.success("Location fetched");
-      },
-      () => {
-        toast.error("Location access denied");
-        setIsFetching(false);
-      },
-    );
-  };
+  //       setIsFetching(false);
+  //       toast.success("Location fetched");
+  //     },
+  //     () => {
+  //       toast.error("Location access denied");
+  //       setIsFetching(false);
+  //     },
+  //   );
+  // };
 
   useEffect(() => {
     fetchAddresses();
@@ -185,7 +188,7 @@ export const Address = () => {
 
               {/* Fetch Location */}
               <button
-                onClick={getLocation}
+                onClick={fetchLiveLocation}
                 type="button"
                 className="w-full rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 font-medium text-orange-700 transition hover:bg-orange-100"
               >
@@ -213,7 +216,7 @@ export const Address = () => {
                 No saved addresses yet
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[450px] overflow-y-auto">
                 {addresses.map((add) => (
                   <div
                     key={add.address_id}
