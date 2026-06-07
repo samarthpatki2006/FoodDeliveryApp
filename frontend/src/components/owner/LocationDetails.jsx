@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { addLocationDetails, getMyRestaurants } from "../../api/owner.api";
 import toast from "react-hot-toast";
 import { Link, replace, useNavigate } from "react-router-dom";
+import getLiveLocation from "../../utils/location";
 
 function LocationDetails() {
   const navigate = useNavigate();
@@ -46,32 +47,7 @@ function LocationDetails() {
   };
 
   const getLocation = (e) => {
-    e.preventDefault();
-
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported");
-      return;
-    }
-
-    setIsFetching(true);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-
-        setIsFetching(false);
-        toast.success("Location fetched");
-      },
-      (error) => {
-        console.log(error);
-
-        toast.error("Location access denied");
-        setIsFetching(false);
-      },
-    );
+    getLiveLocation(e,setIsFetching,setLocation);
   };
 
   useEffect(() => {

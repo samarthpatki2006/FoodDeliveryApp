@@ -11,3 +11,7 @@ export const getAddresses=()=>{
 export const getRestaurants=()=>{
   return API.get("/customer/get-restaurants");
 }
+
+export const getMyCarts=()=>{
+  return API.get("/customer/get-my-carts");
+}

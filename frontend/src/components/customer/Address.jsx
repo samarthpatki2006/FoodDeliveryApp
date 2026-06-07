@@ -216,7 +216,7 @@ export const Address = () => {
                 No saved addresses yet
               </div>
             ) : (
-              <div className="space-y-4 max-h-[450px] overflow-y-auto">
+              <div className="space-y-4 max-h-[460px] overflow-y-auto py-6 rounded-3xl border border-orange-100 px-4 shadow-xl bg-white">
                 {addresses.map((add) => (
                   <div
                     key={add.address_id}

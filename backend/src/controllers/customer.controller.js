@@ -568,4 +568,56 @@ const getMyAddresses=asyncHandler(async(req,res)=>{
   res.status(200).json(new ApiResponse(200,data,data.length===0?"No addresses found":"Addresses fetched successfully"));
 
 })
-export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getMyAddresses };
+
+const getMyCarts = asyncHandler(async (req, res) => {
+  const [rows] = await db.execute(
+    `SELECT 
+      c.cart_id,
+      ci.cart_item_id,
+      ci.menu_item_id,
+      ci.quantity,
+      r.restaurant_name,
+      mi.item_name,
+      mi.price,
+      images.image_url
+    FROM carts c
+    JOIN cart_items ci 
+      ON c.cart_id = ci.cart_id
+    JOIN restaurants r 
+      ON c.restaurant_id = r.restaurant_id
+    JOIN menu_items mi 
+      ON ci.menu_item_id = mi.menu_item_id
+    LEFT JOIN menu_item_images images 
+      ON ci.menu_item_id = images.menu_item_id
+    WHERE c.user_id = ?`,
+    [req.user[0].user_id]
+  );
+
+  const groupedCarts = {};
+
+  rows.forEach((row) => {
+    if (!groupedCarts[row.cart_id]) {
+      groupedCarts[row.cart_id] = {
+        cart_id: row.cart_id,
+        restaurant_name: row.restaurant_name,
+        items: [],
+      };
+    }
+
+    groupedCarts[row.cart_id].items.push({
+      cart_item_id: row.cart_item_id,
+      menu_item_id: row.menu_item_id,
+      quantity: row.quantity,
+      item_name: row.item_name,
+      price: Number(row.price),
+      image_url: row.image_url,
+    });
+  });
+
+  const data = Object.values(groupedCarts);
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, data, "Cart fetched successfully"));
+});
+export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getMyAddresses,getMyCarts };
