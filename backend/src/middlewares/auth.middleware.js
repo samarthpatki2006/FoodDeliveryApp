@@ -14,7 +14,7 @@ const verifyJWT=asyncHandler(async(req,_,next)=>{
     
     const decodedToken=jwt.decode(token,process.env.ACCESS_TOKEN_SECRET)
     
-    const [user]=await db.execute(`select u.user_id,full_name,phone,email,role_name,city,state,u.created_at from users u join roles r on u.role_id=r.role_id join addresses a on u.user_id=a.user_id where u.user_id=? and label="Home";`,[decodedToken.userId])
+    const [user]=await db.execute(`select u.user_id,full_name,phone,email,role_name,u.created_at from users u join roles r on u.role_id=r.role_id where user_id=?;`,[decodedToken.userId])
   
     if(user.length==0){
       throw new ApiError(401,"Invalid Access Token")

@@ -42,8 +42,8 @@ function Register() {
   };
 
   return (
-  <div className="min-h-screen bg-white flex items-center justify-center px-2 py-10">
-    <div className="w-full max-w-lg bg-white border border-orange-100 rounded-3xl shadow-sm px-4 py-6">
+  <div className="max-h-screen bg-white flex items-center justify-center px-2 py-8">
+    <div className="w-full max-w-md bg-white border border-orange-100 rounded-3xl shadow-sm px-4 py-6">
 
       {/* Heading */}
       <div className="text-center mb-8">

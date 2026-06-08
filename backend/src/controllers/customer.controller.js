@@ -90,10 +90,14 @@ const getRestaurantsInMyCity = asyncHandler(async (req, res) => {
   const { address_id } = req.query;
   let restaurants;
   if (!address_id) {
-    [restaurants] = await db.execute(
-      "select * from restaurants where lower(city)=lower(?) order by rating_avg desc;",
-      [req.user[0].city]
-    );
+    const [possibleAddresses]=await db.execute("select label,city from addresses where user_id=?",[req.user[0].user_id]);
+    if(possibleAddresses.length===0){
+      [restaurants]=await db.execute("select * from restaurants order by rating desc limit 5");
+    }
+    else{
+      [restaurants] = await db.execute(
+      "select * from restaurants where lower(city) in (select lower(city) from addresses where user_id=? ) order by rating_avg desc;",[req.user[0].user_id]);
+    }
   }
   else {
     const [rows] = await db.execute("select city from addresses where address_id=?;", [address_id]);
@@ -236,7 +240,6 @@ const updateCartQuantity = asyncHandler(async (req, res) => {
   }
 
   const { cart_item_id, cart_id, quantity } = req.body;
-  
   const [cart]=await db.execute("select cart_id from carts where user_id=? and cart_id=?",[req.user[0].user_id,cart_id]);
 
   if(cart.length===0){
@@ -269,7 +272,7 @@ const deleteCartItem = asyncHandler(async (req, res) => {
   if (req.user[0].role_name !== "customer") {
     throw new ApiError(401, "Unauthorized request");
   }
-  const { cart_item_id, cart_id } = req.body;
+  const { cart_item_id, cart_id } = req.params;
 
   const [cartItem] = await db.execute("select user_id,cart_item_id,carts.cart_id from cart_items join carts on carts.cart_id=cart_items.cart_id where cart_items.cart_item_id=? and carts.cart_id=? and user_id=?", [cart_item_id, cart_id, req.user[0].user_id]);
 
@@ -291,8 +294,12 @@ const deleteCart = asyncHandler(async (req, res) => {
   if (req.user[0].role_name !== "customer") {
     throw new ApiError(401, "Unauthorized request");
   }
-  const { cart_id } = req.body;
 
+  const { cart_id } = req.params;
+  if(!cart_id){
+    throw new ApiError(400,"Cart information required");
+  }
+  console.log(cart_id)
   const [cart] = await db.execute("select user_id,cart_id from carts where user_id=? and cart_id=?", [req.user[0].user_id, cart_id]);
 
   if (cart.length === 0) {
@@ -554,4 +561,66 @@ const addReview=asyncHandler(async(req,res)=>{
 
   res.status(201).json(new ApiResponse(200,{},"Review added successfully"));
 })
-export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview };
+
+const getMyAddresses=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="customer"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+  const [data]=await db.execute("select * from addresses where user_id=?",[req.user[0].user_id]);
+
+  res.status(200).json(new ApiResponse(200,data,data.length===0?"No addresses found":"Addresses fetched successfully"));
+
+})
+
+const getMyCarts = asyncHandler(async (req, res) => {
+  const [rows] = await db.execute(
+    `SELECT 
+      c.cart_id,
+      ci.cart_item_id,
+      ci.menu_item_id,
+      ci.quantity,
+      r.restaurant_name,
+      mi.item_name,
+      mi.price,
+      images.image_url
+    FROM carts c
+    JOIN cart_items ci 
+      ON c.cart_id = ci.cart_id
+    JOIN restaurants r 
+      ON c.restaurant_id = r.restaurant_id
+    JOIN menu_items mi 
+      ON ci.menu_item_id = mi.menu_item_id
+    LEFT JOIN menu_item_images images 
+      ON ci.menu_item_id = images.menu_item_id
+    WHERE c.user_id = ?`,
+    [req.user[0].user_id]
+  );
+
+  const groupedCarts = {};
+
+  rows.forEach((row) => {
+    if (!groupedCarts[row.cart_id]) {
+      groupedCarts[row.cart_id] = {
+        cart_id: row.cart_id,
+        restaurant_name: row.restaurant_name,
+        items: [],
+      };
+    }
+
+    groupedCarts[row.cart_id].items.push({
+      cart_item_id: row.cart_item_id,
+      menu_item_id: row.menu_item_id,
+      quantity: row.quantity,
+      item_name: row.item_name,
+      price: Number(row.price),
+      image_url: row.image_url,
+    });
+  });
+
+  const data = Object.values(groupedCarts);
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, data, "Cart fetched successfully"));
+});
+export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getMyAddresses,getMyCarts };
