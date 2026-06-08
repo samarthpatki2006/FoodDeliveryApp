@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Trash2, ShoppingBag } from "lucide-react";
-import { getMyCarts } from "../../api/customer.api";
+import { deleteCart, deleteCartItem, getMyCarts, updateCartQuantity } from "../../api/customer.api";
 
 const Cart = () => {
   const [carts, setCarts] = useState([]);
@@ -25,19 +25,51 @@ const Cart = () => {
   };
 
   // TODO: implement quantity update
-  const updateCartQty = async (cartItemId, newQty) => {};
+  const handleUpdateCartQty = async (cartId,cartItemId, newQty) => {
+    try{
+      const data={"cart_id":cartId,"cart_item_id":cartItemId,"quantity":newQty};
+      console.log(data);
+      const response=await updateCartQuantity(data);
+      fetchCart();
+    }
+    catch(err){
+      toast.error("Failed to update quantity");
+    }
+  };
 
   // TODO: implement delete cart item
-  const deleteCartItem = async (cartItemId) => {};
+  const handleDeleteCartItem = async (cartId,cartItemId) => {
+    try{
+      const response=await deleteCartItem({"cart_id":cartId,"cart_item_id":cartItemId})
+      fetchCart();
+      toast.success("Cart item deleted successfully");
+    }
+    catch(err){
+      toast.error("Failed to delete cart item");
+    }
+  };
 
   // TODO: implement place order
   const placeOrder = async (cartId) => {};
 
-  const deletCart = async () => {};
-  const handleQtyChange = (cartItemId, currentQty, delta) => {
+  const handleDeleteCart = async (cart_id) => {
+    try{
+      // console.log(cart_id)
+      const response=await deleteCart(cart_id);
+      if(response.status<300){
+        toast.success("Cart deleted successfully");
+      }
+      fetchCart();
+    }
+    catch(err){
+      console.log(err.response.data.message)
+      toast.error("Failed to delete cart");
+    }
+  };
+  const handleQtyChange = (cartId,cartItemId, currentQty, delta) => {
     const newQty = currentQty + delta;
     if (newQty < 1) return;
-    updateCartQty(cartItemId, newQty);
+    handleUpdateCartQty(cartId,cartItemId, newQty);
   };
 
   if (loading) {
@@ -116,6 +148,7 @@ const Cart = () => {
                           <button
                             onClick={() =>
                               handleQtyChange(
+                                cart.cart_id,
                                 item.cart_item_id,
                                 item.quantity,
                                 -1,
@@ -131,6 +164,7 @@ const Cart = () => {
                           <button
                             onClick={() =>
                               handleQtyChange(
+                                cart.cart_id,
                                 item.cart_item_id,
                                 item.quantity,
                                 1,
@@ -149,7 +183,7 @@ const Cart = () => {
 
                         {/* Delete Button */}
                         <button
-                          onClick={() => deleteCartItem(item.cart_item_id)}
+                          onClick={() => handleDeleteCartItem(cart.cart_id,item.cart_item_id)}
                           className="flex-shrink-0 rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
                         >
                           <Trash2 size={16} />
@@ -159,25 +193,28 @@ const Cart = () => {
                   </div>
 
                   {/* Cart Footer */}
-                  <div className="mt-5 flex items-center justify-between border-t border-orange-100 pt-4">
-                    <span className="text-base font-semibold text-gray-700">
-                      Total
+                  <div className="mt-5 flex items-center justify-end border-t border-orange-100 pt-4">
+                    <span className="text-xl font-bold text-gray-900 mr-2">
+                      Total:
                     </span>
                     <span className="text-xl font-bold text-gray-900">
                       ₹{cartTotal.toFixed(2)}
+                    </span>
+                    <span className="text-sm font-secondary">
+                      {`(Excl. delivery fee and GST)`}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-6">
                     <button
-                      onClick={() => deletCart(cart.cart_id)}
+                      onClick={() => placeOrder(cart.cart_id)}
                       className="mt-4 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98]"
                     >
                       Place Order
                     </button>
 
                     <button
-                      onClick={() => placeOrder(cart.cart_id)}
+                      onClick={() => handleDeleteCart(cart.cart_id)}
                       className="mt-4 rounded-xl bg-red-500 px-4 py-3 font-semibold text-white transition hover:bg-red-600 active:scale-[0.98]"
                     >
                       Delete Cart

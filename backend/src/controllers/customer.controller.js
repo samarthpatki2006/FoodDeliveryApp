@@ -240,7 +240,6 @@ const updateCartQuantity = asyncHandler(async (req, res) => {
   }
 
   const { cart_item_id, cart_id, quantity } = req.body;
-  
   const [cart]=await db.execute("select cart_id from carts where user_id=? and cart_id=?",[req.user[0].user_id,cart_id]);
 
   if(cart.length===0){
@@ -273,7 +272,7 @@ const deleteCartItem = asyncHandler(async (req, res) => {
   if (req.user[0].role_name !== "customer") {
     throw new ApiError(401, "Unauthorized request");
   }
-  const { cart_item_id, cart_id } = req.body;
+  const { cart_item_id, cart_id } = req.params;
 
   const [cartItem] = await db.execute("select user_id,cart_item_id,carts.cart_id from cart_items join carts on carts.cart_id=cart_items.cart_id where cart_items.cart_item_id=? and carts.cart_id=? and user_id=?", [cart_item_id, cart_id, req.user[0].user_id]);
 
@@ -295,8 +294,12 @@ const deleteCart = asyncHandler(async (req, res) => {
   if (req.user[0].role_name !== "customer") {
     throw new ApiError(401, "Unauthorized request");
   }
-  const { cart_id } = req.body;
 
+  const { cart_id } = req.params;
+  if(!cart_id){
+    throw new ApiError(400,"Cart information required");
+  }
+  console.log(cart_id)
   const [cart] = await db.execute("select user_id,cart_id from carts where user_id=? and cart_id=?", [req.user[0].user_id, cart_id]);
 
   if (cart.length === 0) {
