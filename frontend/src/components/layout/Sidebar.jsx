@@ -86,9 +86,9 @@ const Sidebar = ({ navItems = [], roleName = "User" }) => {
       <div className="p-4 border-t border-orange-100">
         <button
           onClick={handleSignOut}
-          className="group flex items-center gap-4 w-full px-4 py-3 rounded-2xl text-sm font-medium text-slate-600 hover:text-red-500 hover:bg-red-200 transition-all duration-300"
+          className="group flex items-center gap-4 w-full px-4 py-3 rounded-2xl text-sm font-medium text-slate-600 hover:text-black hover:bg-orange-200 transition-all duration-300"
         >
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 group-hover:bg-red-100 transition">
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-orange-100 group-hover:bg-orange-300 transition">
             <LogOut size={18} />
           </div>
 

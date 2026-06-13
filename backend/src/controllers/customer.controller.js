@@ -130,12 +130,12 @@ const getMyOrders = asyncHandler(async (req, res) => {
 
   if (order_status_id) {
     [orders] = await db.execute(
-      "select * from orders where user_id=? and order_status_id=?",
+      "select o.*,restaurant_name from orders o join restaurants r on o.restaurant_id=r.restaurant_id where user_id=? and order_status_id=?",
       [req.user[0].user_id, Number(order_status_id)]
     );
   } else {
     [orders] = await db.execute(
-      "select * from orders where user_id=?",
+      "select o.*,restaurant_name from orders o join restaurants r on o.restaurant_id=r.restaurant_id where user_id=?",
       [req.user[0].user_id]
     );
   }
@@ -562,7 +562,7 @@ const addReview=asyncHandler(async(req,res)=>{
   res.status(201).json(new ApiResponse(200,{},"Review added successfully"));
 })
 
-const getMyAddresses=asyncHandler(async(req,res)=>{
+const getAddresses=asyncHandler(async(req,res)=>{
   if(req.user[0].role_name!=="customer"){
     throw new ApiError(401,"Unauthorized request");
   }
@@ -623,4 +623,107 @@ const getMyCarts = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, data, "Cart fetched successfully"));
 });
-export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getMyAddresses,getMyCarts };
+
+const getOrderSummaryForCart=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="customer"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+  const {cart_id,delivery_address_id}=req.params;
+  const [existingCart] = await db.execute(
+    "select * from carts where cart_id=? and user_id=?",
+    [cart_id, req.user[0].user_id]
+  );
+
+  if (existingCart.length === 0) {
+    throw new ApiError(
+      400,
+      "Cart not found or unauthorized request"
+    );
+  }
+
+  const [orderItems] = await db.execute(
+    `select ci.menu_item_id,
+    ci.quantity,
+    mi.price,
+    mi.item_name
+    from cart_items ci
+    join menu_items mi
+    on ci.menu_item_id=mi.menu_item_id
+    where ci.cart_id=?`,
+    [cart_id]
+  );
+
+  if (orderItems.length === 0) {
+    throw new ApiError(400, "No items in cart");
+  }
+
+  let itemPrice = 0;
+
+  orderItems.forEach((item) => {
+    itemPrice += item.quantity * item.price;
+  });
+  
+  const delivery_fee = await getDeliveryFee(
+    delivery_address_id,
+    existingCart[0].restaurant_id
+  );
+
+  const taxAmount = await getTaxAmount(
+    itemPrice + delivery_fee
+  );
+  
+  const totalAmount = itemPrice + delivery_fee + taxAmount;
+  const data={
+    "ItemPrice":itemPrice,
+    "DeliveryFee":delivery_fee,
+    "TaxAmount":taxAmount,
+    "TotalAmount":totalAmount
+  }
+  res.status(200).json(new ApiResponse(200,data,"Summary fetched successfully"));
+
+})
+
+const getOrderSummary=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="customer"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+  const {menu_item_id,quantity,delivery_address_id}=req.params;
+  const [menuItem] = await db.execute(
+    "select menu_item_id,item_name,restaurant_id,price from menu_items where menu_item_id=?",
+    [menu_item_id]
+  );
+
+  if (menuItem.length === 0) {
+    throw new ApiError(400, "Menu item not found");
+  }
+  const itemPrice =Number(quantity) * Number(menuItem[0].price);
+
+  const delivery_fee = await getDeliveryFee(
+    delivery_address_id,
+    menuItem[0].restaurant_id
+  );
+
+  const taxAmount = await getTaxAmount(
+    itemPrice + delivery_fee
+  );
+
+  const totalAmount =itemPrice + delivery_fee + taxAmount;
+  const data={
+    "ItemPrice":itemPrice,
+    "DeliveryFee":delivery_fee,
+    "TaxAmount":taxAmount,
+    "TotalAmount":totalAmount
+  }
+  res.status(200).json(new ApiResponse(200,data,"Summary fetched successfully"));
+})
+
+const getPaymentMethods=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="customer"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+
+  const [data]=await db.execute("select * from payment_methods");
+
+  res.status(200).json(new ApiResponse(200,data,"Payment methods fetched"));
+})
+export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getAddresses,getMyCarts,getOrderSummaryForCart,getOrderSummary,getPaymentMethods };

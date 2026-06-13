@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Trash2, ShoppingBag } from "lucide-react";
 import { deleteCart, deleteCartItem, getMyCarts, updateCartQuantity } from "../../api/customer.api";
+import {useNavigate} from "react-router-dom";
 
 const Cart = () => {
+  const navigate=useNavigate();
   const [carts, setCarts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +52,10 @@ const Cart = () => {
   };
 
   // TODO: implement place order
-  const placeOrder = async (cartId) => {};
+  const placeOrder = async (cartId) => {
+    console.log(cartId);
+    navigate("/customer/checkout", { state: { cartId } });
+  };
 
   const handleDeleteCart = async (cart_id) => {
     try{
