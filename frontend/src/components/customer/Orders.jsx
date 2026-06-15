@@ -9,9 +9,11 @@ const STATUS_FILTERS = [
   { label: "Pending", value: "1" },
   { label: "Confirmed", value: "2" },
   { label: "Preparing", value: "3" },
-  { label: "Out for Delivery", value: "4" },
-  { label: "Delivered", value: "5" },
-  { label: "Cancelled", value: "6" },
+  { label: "Ready For Pickup", value: "4" },
+  { label: "Out For Delivery", value: "5" },
+  { label: "Delivered", value: "6" },
+  {label:"Cancelled",value:"7"},
+  {label:"Failed",value:"8"}
 ];
 
 const STATUS_STYLES = {
@@ -34,19 +36,31 @@ const STATUS_STYLES = {
     dot: "bg-orange-400",
   },
   4: {
-    label: "Out for Delivery",
+    label: "Ready For Pickup",
     bg: "bg-purple-50",
     text: "text-purple-600",
     dot: "bg-purple-400",
   },
   5: {
-    label: "Delivered",
+    label: "Out For Delivery",
     bg: "bg-green-50",
     text: "text-green-600",
     dot: "bg-green-400",
   },
   6: {
+    label: "Delivered",
+    bg: "bg-green-50",
+    text: "text-green-500",
+    dot: "bg-green-400",
+  },
+  7: {
     label: "Cancelled",
+    bg: "bg-indigo-50",
+    text: "text-indigo-500",
+    dot: "bg-indigo-400",
+  },
+  8: {
+    label: "Failed",
     bg: "bg-red-50",
     text: "text-red-500",
     dot: "bg-red-400",
@@ -94,7 +108,7 @@ const Orders = () => {
 
   return (
     <div className="min-h-screen bg-orange-50/30 px-4 py-8">
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>

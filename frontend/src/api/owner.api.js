@@ -36,3 +36,15 @@ export const addRestaurantCuisine=(cuisine_id,restaurant_id)=>{
 export const addMenuItem=(restaurant_id,formData)=>{
   return API.post(`/owner/add-menu-items/${restaurant_id}`,formData);
 }
+export const getOrders=(restaurant_id,order_status_id)=>{
+  return API.get("/owner/get-orders",{params:{restaurant_id,order_status_id}});
+}
+export const getOrderStatuses=()=>{
+  return API.get("/owner/get-order-statuses");
+}
+export const updateOrderStatus=(data)=>{
+  return API.patch("/owner/update-order-status",data);
+}
+export const updateOpenStatus=(data)=>{
+  return API.patch("/owner/update-open-status",data);
+}

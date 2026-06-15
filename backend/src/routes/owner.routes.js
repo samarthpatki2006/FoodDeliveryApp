@@ -1,5 +1,5 @@
 import {Router} from "express";
-import { addRestaurantDetails,addLocationDetails,addOperationDetails,addBrandingDetails,getMyRestaurants,getRestaurantImages,addRestaurantCuisines,addMenuItems, getAllCuisines,getAllCategories} from "../controllers/owner.controller.js";
+import { addRestaurantDetails,addLocationDetails,addOperationDetails,addBrandingDetails,getMyRestaurants,getRestaurantImages,addRestaurantCuisines,addMenuItems, getAllCuisines,getAllCategories, getAllOrders, updateOrderStatus, updateOpenStatus, getOrderStatuses} from "../controllers/owner.controller.js";
 import {verifyJWT} from "../middlewares/auth.middleware.js";
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -15,4 +15,8 @@ router.route("/add-restaurant-cuisines/:restaurant_id").post(verifyJWT,addRestau
 router.route("/add-menu-items/:restaurant_id").post(verifyJWT,upload.fields([{name:"menu_image",maxCount:1}]),addMenuItems);
 router.route("/get-all-cuisines").get(verifyJWT,getAllCuisines);
 router.route("/get-all-categories").get(verifyJWT,getAllCategories);
+router.route("/get-orders").get(verifyJWT,getAllOrders);
+router.route("/update-order-status").patch(verifyJWT,updateOrderStatus);
+router.route("/update-open-status").patch(verifyJWT,updateOpenStatus);
+router.route("/get-order-statuses").get(verifyJWT,getOrderStatuses);
 export default router;

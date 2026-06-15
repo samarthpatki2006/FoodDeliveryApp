@@ -285,4 +285,89 @@ const getAllCategories=asyncHandler(async(req,res)=>{
 
   res.status(200).json(new ApiResponse(200,rows,"Categories fetched successfully"));
 })
-export { addRestaurantDetails, addLocationDetails, addOperationDetails, addBrandingDetails, getMyRestaurants, getRestaurantImages, addRestaurantCuisines,addMenuItems,getAllCuisines,getAllCategories };
+
+const getAllOrders=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="owner"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+  const {restaurant_id,order_status_id}=req.query;
+  let rows;
+  console.log(order_status_id)
+  if(Number(order_status_id)!==0){
+    [rows]=await db.execute("select * from orders o join order_items oi on o.order_id=oi.order_id where restaurant_id=? and order_status_id=?",[restaurant_id,order_status_id]);
+  }
+  else{
+    [rows]=await db.execute("select * from orders o join order_items oi on o.order_id=oi.order_id where restaurant_id=?",[restaurant_id]);
+  }
+
+  const groupedOrders={};
+
+  rows.forEach((d)=>{
+    if(!groupedOrders[d.order_id]){
+      groupedOrders[d.order_id]={
+        order_id:d.order_id,
+        order_status_id:d.order_status_id,
+        subtotal:d.subtotal,
+        delivery_fee:d.delivery_fee,
+        tax_amount:d.tax_amount,
+        total_amount:d.total_amount,
+        items:[]
+      }
+    }
+    groupedOrders[d.order_id].items.push({
+      order_item_id:d.order_item_id,
+      menu_item_id:d.menu_item_id,
+      item_name:d.item_name,
+      item_price:d.item_price,
+      quantity:d.quantity
+    })
+  })
+  if(rows.length===0){
+    throw new ApiError(400,"No orders found");
+  }
+  const data=Object.values(groupedOrders);
+
+  res.status(200).json(new ApiResponse(200,data,"Orders fetched successfully"));
+})
+
+const updateOrderStatus=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="owner"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+  const {order_id,order_status_id}=req.body;
+
+  const [affectedRows]=await db.execute("update orders set order_status_id=? where order_id=?",[order_status_id,order_id]);
+
+  if(affectedRows.length===0){
+    throw new ApiError(400,"No such order found");
+  }
+
+  res.status(201).json(new ApiResponse(201,{},"Status updated successfully"));
+})
+
+const updateOpenStatus=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="owner"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+  const {restaurant_id,is_open}=req.body;
+
+  const [data]=await db.execute("select restaurant_name from restaurants where restaurant_id=? and owner_id=?",[restaurant_id,req.user[0].user_id]);
+
+  if(data.length===0){
+    throw new ApiError(401,"Unauthorized request");
+  }
+
+  await db.execute("update restaurants set is_open=? where restaurant_id=?",[is_open,restaurant_id]);
+
+  res.status(201).json(new ApiResponse(201,{},"Open status updated"));
+})
+
+const getOrderStatuses=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="owner"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+  const [data]=await db.execute("select * from order_statuses where order_status_id<6");
+
+  res.status(200).json(new ApiResponse(200,data,"Order statuses fetched"));
+})
+export { addRestaurantDetails, addLocationDetails, addOperationDetails, addBrandingDetails, getMyRestaurants, getRestaurantImages, addRestaurantCuisines,addMenuItems,getAllCuisines,getAllCategories,getAllOrders,updateOpenStatus,updateOrderStatus,getOrderStatuses };

@@ -21,6 +21,7 @@ import Cart from "../components/customer/Cart.jsx";
 import Payments from "../components/customer/Payments.jsx";
 import Orders from "../components/customer/Orders.jsx";
 import Checkout from "../components/customer/Checkout.jsx";
+import ManageOrders from "../components/owner/ManageOrders.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -55,6 +56,7 @@ function AppRoutes() {
           <Route path="add-branding-details" element={<BrandingDetails />}/>
           <Route path="manage-cuisines" element={<ManageCuisines/>}/>
           <Route path="manage-menu" element={<ManageMenu/>}/>
+          <Route path="manage-orders" element={<ManageOrders/>}/>
         </Route>
       </Route>
 
