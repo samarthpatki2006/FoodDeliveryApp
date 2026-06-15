@@ -523,15 +523,13 @@ const getMenuItems=asyncHandler(async(req,res)=>{
   let menuItems;
   if(address_id){
     const [rows]=await db.execute("select city from addresses where address_id=?",[address_id]);
-
     if(rows.length===0){
       throw new ApiError(400,"Invalid address id");
     }
-
     [menuItems]=await db.execute("select menu_item_id,item_name,cuisine_name,category_name,is_veg,description,price,is_available from menu_items mt join cuisines cu on mt.cuisine_id=cu.cuisine_id join categories ct on mt.category_id=ct.category_id where restaurant_id in (select restaurant_id from restaurants where lower(city)=lower(?))",[rows[0].city]);
   }
   else{
-    [menuItems]=await db.execute("select menu_item_id,item_name,cuisine_name,category_name,is_veg,description,price,is_available from menu_items mt join cuisines cu on mt.cuisine_id=cu.cuisine_id join categories ct on mt.category_id=ct.category_id where restaurant_id in (select restaurant_id from restaurants where lower(city)=lower(?))",[req.user[0].city]);
+    [menuItems]=await db.execute("select menu_item_id,item_name,cuisine_name,category_name,is_veg,description,price,is_available from menu_items mt join cuisines cu on mt.cuisine_id=cu.cuisine_id join categories ct on mt.category_id=ct.category_id where restaurant_id in (select restaurant_id from restaurants where lower(city) in (select lower(city) from addresses where user_id=?))",[req.user[0].user_id]);
   }
 
   if(menuItems.length===0){
@@ -726,4 +724,116 @@ const getPaymentMethods=asyncHandler(async(req,res)=>{
 
   res.status(200).json(new ApiResponse(200,data,"Payment methods fetched"));
 })
-export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getAddresses,getMyCarts,getOrderSummaryForCart,getOrderSummary,getPaymentMethods };
+
+const getRestaurantMenu=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="customer"){
+    throw new ApiError(401,"nauthorized request");
+  }
+
+  const {restaurant_id}=req.params;
+
+  const [data]=await db.execute("select * from menu_items mt left join menu_item_images mi on mt.menu_item_id=mi.menu_item_id where restaurant_id=?",[restaurant_id]);
+
+  if(data.length===0){
+    throw new ApiError(400,"No menu items found");
+  }
+  res.status(200).json(new ApiResponse(200,data,"Menu items fetched successfully"));
+})
+const getNearbyRestaurants = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized Request");
+  }
+
+  const { latitude, longitude, radius } = req.query;
+
+  // Validation
+  if (
+    !latitude ||
+    !longitude ||
+    !radius
+  ) {
+    throw new ApiError(
+      400,
+      "Latitude, longitude and radius are required"
+    );
+  }
+
+  const userLatitude = Number(latitude);
+  const userLongitude = Number(longitude);
+  const searchRadius = Number(radius);
+
+  if (
+    isNaN(userLatitude) ||
+    isNaN(userLongitude) ||
+    isNaN(searchRadius)
+  ) {
+    throw new ApiError(
+      400,
+      "Invalid coordinates or radius"
+    );
+  }
+
+  // Fetch only restaurants having coordinates
+  const [restaurants] = await db.execute(`
+    SELECT *
+    FROM restaurants
+    WHERE latitude IS NOT NULL
+    AND longitude IS NOT NULL
+    AND is_open = 1
+  `);
+
+  // Filter restaurants within radius
+  const nearbyRestaurants =
+    restaurants
+      .map((restaurant) => {
+        const distance =
+          calculateDistance(
+            userLatitude,
+            userLongitude,
+            Number(
+              restaurant.latitude
+            ),
+            Number(
+              restaurant.longitude
+            )
+          );
+
+        return {
+          ...restaurant,
+          distance_km:
+            Number(
+              distance.toFixed(2)
+            ),
+        };
+      })
+      .filter(
+        (restaurant) =>
+          restaurant.distance_km <=
+          searchRadius
+      )
+      .sort(
+        (a, b) =>
+          a.distance_km -
+          b.distance_km
+      );
+
+  if (
+    nearbyRestaurants.length === 0
+  ) {
+    throw new ApiError(
+      400,
+      "No nearby restaurants found"
+    );
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        nearbyRestaurants,
+        "Nearby restaurants fetched successfully"
+      )
+    );
+});
+export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getAddresses,getMyCarts,getOrderSummaryForCart,getOrderSummary,getPaymentMethods,getRestaurantMenu,getNearbyRestaurants };

@@ -16,12 +16,12 @@ import OwnerDashboard from "../components/owner/OwnerDashboard.jsx";
 import ManageCuisines from "../components/owner/ManageCuisines.jsx";
 import ManageMenu from "../components/owner/ManageMenu.jsx";
 import Address from "../components/customer/Address.jsx";
-import CustomerDashboard from "../components/customer/CustomerDashboard.jsx";
 import Cart from "../components/customer/Cart.jsx";
 import Payments from "../components/customer/Payments.jsx";
 import Orders from "../components/customer/Orders.jsx";
 import Checkout from "../components/customer/Checkout.jsx";
 import ManageOrders from "../components/owner/ManageOrders.jsx";
+import Home from "../components/customer/CustomerHomePage.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -37,7 +37,7 @@ function AppRoutes() {
 
       <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
         <Route path="/customer" element={<Customer />}>
-          <Route path="dashboard" element={<CustomerDashboard/>}/>
+          <Route path="dashboard" element={<Home/>}/>
           <Route path="address" element={<Address/>}/>
           <Route path="cart" element={<Cart/>}/>
           <Route path="payments" element={<Payments/>}/>

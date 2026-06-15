@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { addAddressDetails, addItemToCart, addReview, deleteCart, deleteCartItem, getMenuItems, getMyOrders, getMyPaymentHistory, getRestaurantsInMyCity, placeOrder, placeOrderFromCart, updateCartQuantity,getAddresses, getMyCarts, getOrderSummaryForCart, getOrderSummary, getPaymentMethods } from "../controllers/customer.controller.js";
+import { addAddressDetails, addItemToCart, addReview, deleteCart, deleteCartItem, getMenuItems, getMyOrders, getMyPaymentHistory, getRestaurantsInMyCity, placeOrder, placeOrderFromCart, updateCartQuantity,getAddresses, getMyCarts, getOrderSummaryForCart, getOrderSummary, getPaymentMethods, getRestaurantMenu, getNearbyRestaurants } from "../controllers/customer.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router=Router();
@@ -19,5 +19,7 @@ router.route("/get-my-addresses").get(verifyJWT,getAddresses);
 router.route("/get-my-carts").get(verifyJWT,getMyCarts);
 router.route("/get-cart-summary/:cart_id/:delivery_address_id").get(verifyJWT,getOrderSummaryForCart);
 router.route("/get-order-summary/:menu_item_id/:quantity/:delivery_address_id").get(verifyJWT,getOrderSummary);
-router.route("/get-payment-methods").get(verifyJWT,getPaymentMethods)
+router.route("/get-payment-methods").get(verifyJWT,getPaymentMethods);
+router.route("/get-restaurant-menu/:restaurant_id").get(verifyJWT,getRestaurantMenu);
+router.route("/get-nearby-restaurants").get(verifyJWT,getNearbyRestaurants);
 export default router;

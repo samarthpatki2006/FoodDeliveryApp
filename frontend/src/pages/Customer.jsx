@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 const adminNavItems = [
-  {to:"/customer/dashboard",label:"Dashboard",icon:LayoutDashboard},
+  {to:"/customer/dashboard",label:"Home",icon:Home},
   { to: "/customer/address", label: "Address", icon: Home },
   {to:"/customer/orders",label:"My Orders",icon:ListOrderedIcon},
   {to:"/customer/payments",label:"My Payments",icon:IndianRupee},
