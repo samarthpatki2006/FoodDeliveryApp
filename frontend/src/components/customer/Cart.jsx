@@ -87,10 +87,10 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-orange-50/30 px-4 py-8">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-3xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Cart</h1>
+          <h1 className="text-3xl font-bold text-gray-900">My Carts</h1>
           <p className="mt-2 font-medium text-orange-500">
             Review your items before ordering
           </p>
@@ -159,7 +159,7 @@ const Cart = () => {
                                 -1,
                               )
                             }
-                            className="flex h-7 w-7 items-center justify-center rounded-full border border-orange-200 bg-white text-orange-600 transition hover:bg-orange-100 active:scale-95 text-lg font-semibold leading-none"
+                            className="flex h-7 w-7 items-center justify-center rounded-full border border-orange-200 bg-white text-orange-600 transition hover:bg-orange-100 active:scale-95 text-md font-semibold leading-none"
                           >
                             −
                           </button>
@@ -175,7 +175,7 @@ const Cart = () => {
                                 1,
                               )
                             }
-                            className="flex h-7 w-7 items-center justify-center rounded-full border border-orange-200 bg-white text-orange-600 transition hover:bg-orange-100 active:scale-95 text-lg font-semibold leading-none"
+                            className="flex h-7 w-7 items-center justify-center rounded-full border border-orange-200 bg-white text-orange-600 transition hover:bg-orange-100 active:scale-95 text-md font-semibold leading-none"
                           >
                             +
                           </button>
@@ -199,13 +199,13 @@ const Cart = () => {
 
                   {/* Cart Footer */}
                   <div className="mt-5 flex items-center justify-end border-t border-orange-100 pt-4">
-                    <span className="text-xl font-bold text-gray-900 mr-2">
+                    <span className="text-sm font-bold text-gray-900 mr-2">
                       Total:
                     </span>
-                    <span className="text-xl font-bold text-gray-900">
+                    <span className="text-sm font-bold text-gray-900">
                       ₹{cartTotal.toFixed(2)}
                     </span>
-                    <span className="text-sm font-secondary">
+                    <span className="text-xs font-secondary">
                       {`(Excl. delivery fee and GST)`}
                     </span>
                   </div>
@@ -213,14 +213,14 @@ const Cart = () => {
                   <div className="grid grid-cols-2 gap-6">
                     <button
                       onClick={() => placeOrder(cart.cart_id)}
-                      className="mt-4 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98]"
+                      className="mt-4 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98] tex-sm"
                     >
                       Place Order
                     </button>
 
                     <button
                       onClick={() => handleDeleteCart(cart.cart_id)}
-                      className="mt-4 rounded-xl bg-red-500 px-4 py-3 font-semibold text-white transition hover:bg-red-600 active:scale-[0.98]"
+                      className="mt-4 rounded-xl bg-red-500 px-4 py-3 font-semibold text-white transition hover:bg-red-600 active:scale-[0.98] text-sm"
                     >
                       Delete Cart
                     </button>

@@ -113,7 +113,7 @@ export const Address = () => {
 
   return (
     <div className="h-screen bg-orange-50/30 px-4 py-8">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Manage Addresses</h1>
