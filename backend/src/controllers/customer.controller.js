@@ -726,11 +726,18 @@ const getRestaurantMenu=asyncHandler(async(req,res)=>{
 
   const {restaurant_id}=req.params;
 
-  const [data]=await db.execute("select * from menu_items mt left join menu_item_images mi on mt.menu_item_id=mi.menu_item_id where restaurant_id=?",[restaurant_id]);
+  const [data]=await db.execute(`SELECT
+    mt.*,
+    mi.image_url
+FROM menu_items mt
+LEFT JOIN menu_item_images mi
+    ON mt.menu_item_id = mi.menu_item_id
+WHERE mt.restaurant_id = ?`,[restaurant_id]);
 
   if(data.length===0){
     throw new ApiError(400,"No menu items found");
   }
+  console.log(data);
   res.status(200).json(new ApiResponse(200,data,"Menu items fetched successfully"));
 })
 

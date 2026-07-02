@@ -370,4 +370,20 @@ const getOrderStatuses=asyncHandler(async(req,res)=>{
 
   res.status(200).json(new ApiResponse(200,data,"Order statuses fetched"));
 })
-export { addRestaurantDetails, addLocationDetails, addOperationDetails, addBrandingDetails, getMyRestaurants, getRestaurantImages, addRestaurantCuisines,addMenuItems,getAllCuisines,getAllCategories,getAllOrders,updateOpenStatus,updateOrderStatus,getOrderStatuses };
+
+const getMyRestaurantItems=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=='owner'){
+    throw new ApiError(401,"Unauthorized request");
+  }
+
+  const {restaurant_id}=req.params;
+
+  const [data]=await db.execute("select * from menu_items where restaurant_id=?",[restaurant_id]);
+
+  if(data.length===0){
+    throw new ApiError(400,"No items found");
+  }
+
+  res.status(200).json(new ApiResponse(200,data,"Items fetched successfully"));
+})
+export { addRestaurantDetails, addLocationDetails, addOperationDetails, addBrandingDetails, getMyRestaurants, getRestaurantImages, addRestaurantCuisines,addMenuItems,getAllCuisines,getAllCategories,getAllOrders,updateOpenStatus,updateOrderStatus,getOrderStatuses,getMyRestaurantItems };
