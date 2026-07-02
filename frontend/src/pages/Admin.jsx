@@ -5,6 +5,9 @@ import { LayoutDashboard } from "lucide-react";
 
 const adminNavItems = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/userManagement", label: "User Management", icon: LayoutDashboard },
+  { to: "/admin/restaurantManagement", label: "Restaurant Management", icon: LayoutDashboard },
+
 ];
 
 const AdminLayout = () => {
