@@ -12,8 +12,8 @@ const STATUS_FILTERS = [
   { label: "Ready For Pickup", value: "4" },
   { label: "Out For Delivery", value: "5" },
   { label: "Delivered", value: "6" },
-  {label:"Cancelled",value:"7"},
-  {label:"Failed",value:"8"}
+  { label: "Cancelled", value: "7" },
+  { label: "Failed", value: "8" },
 ];
 
 const STATUS_STYLES = {
@@ -108,7 +108,7 @@ const Orders = () => {
 
   return (
     <div className="min-h-screen bg-orange-50/30 px-4 py-8">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-3xl">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
@@ -154,7 +154,7 @@ const Orders = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
             {orders.map((order) => {
               const status = STATUS_STYLES[order.order_status_id] || {
                 label: "Unknown",
@@ -167,58 +167,51 @@ const Orders = () => {
                 <div
                   key={order.order_id}
                   onClick={() => navigate(`/customer/orders/${order.order_id}`)}
-                  className="cursor-pointer rounded-3xl border border-orange-100 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-orange-200 active:scale-[0.99]"
+                  className="cursor-pointer rounded-2xl border border-orange-100 bg-white px-5 py-4 transition hover:border-orange-200 hover:shadow-sm active:scale-[0.99]"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    {/* Left info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-xs font-medium text-gray-400">
-                          Order #{order.order_id}
-                        </p>
-                        <span className="text-gray-200">·</span>
-                        <p className="text-xs text-gray-400">
-                          {formatDate(order.created_at)}
-                        </p>
-                      </div>
-
-                      <p className="font-semibold text-gray-900 truncate">
-                        {order.restaurant_name ||
-                          `Restaurant #${order.restaurant_id}`}
-                      </p>
-
-                      <div className="mt-2 flex flex-wrap gap-3 text-sm text-gray-500">
-                        <span>
-                          Subtotal:{" "}
-                          <span className="font-medium text-gray-700">
-                            ₹{Number(order.subtotal).toFixed(2)}
-                          </span>
-                        </span>
-                        <span>
-                          Total:{" "}
-                          <span className="font-semibold text-gray-900">
-                            ₹{Number(order.total_amount).toFixed(2)}
-                          </span>
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Right: status + chevron */}
-                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  {/* Top row: restaurant + status badge */}
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <p className="font-semibold text-gray-900 truncate">
+                      {order.restaurant_name}
+                    </p>
+                    <span
+                      className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${status.bg} ${status.text}`}
+                    >
                       <span
-                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${status.bg} ${status.text}`}
-                      >
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${status.dot}`}
-                        />
-                        {status.label}
-                      </span>
-                      <ChevronRight size={16} className="text-gray-300" />
-                    </div>
+                        className={`h-1.5 w-1.5 rounded-full ${status.dot}`}
+                      />
+                      {status.label}
+                    </span>
                   </div>
 
+                  {/* Meta row: order id + date */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <p className="text-xs text-gray-400">
+                      {formatDate(order.created_at)}
+                    </p>
+                  </div>
+
+                  {/* Amounts row */}
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-gray-400">
+                      Subtotal{" "}
+                      <span className="font-medium text-gray-700">
+                        ₹{Number(order.subtotal).toFixed(2)}
+                      </span>
+                    </span>
+                    <span className="text-gray-200">·</span>
+                    <span className="text-gray-400">
+                      Total{" "}
+                      <span className="font-semibold text-gray-900">
+                        ₹{Number(order.total_amount).toFixed(2)}
+                      </span>
+                    </span>
+                    <ChevronRight size={15} className="text-gray-300 ml-auto" />
+                  </div>
+
+                  {/* Special instructions */}
                   {order.special_instructions?.trim() && (
-                    <p className="mt-3 rounded-xl border border-orange-50 bg-orange-50/50 px-3 py-2 text-xs text-gray-500 italic">
+                    <p className="mt-3 rounded-xl bg-orange-50/60 px-3 py-2 text-xs text-gray-400 italic leading-relaxed">
                       "{order.special_instructions}"
                     </p>
                   )}

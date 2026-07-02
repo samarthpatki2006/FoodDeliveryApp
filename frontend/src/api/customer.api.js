@@ -57,3 +57,23 @@ export const getRestaurantMenu = (restaurant_id) => {
 export const getNearbyRestaurants = (latitude, longitude, radius = 5) => {
   return API.get("/customer/nearby-restaurants", { params: { latitude, longitude, radius, } });
 };
+export const getInitialRestaurants=()=>{
+  return API.get("/customer/get-initial-restaurants");
+}
+
+export const getMenuItems=(address_id)=>{
+  return API.get("/customer/get-menu-items",{params:{address_id}});
+}
+
+export const getOrderSummary=(data)=>{
+  console.log(data)
+  return API.get(`/customer/get-order-summary/${data.menu_item_id}/${data.quantity}/${data.delivery_address_id}`);
+}
+
+export const placeOrder=(data)=>{
+  return API.post("/customer/place-order",data);
+}
+
+export const addItemToCart=(data)=>{
+  return API.post("/customer/add-item-to-cart",data);
+}

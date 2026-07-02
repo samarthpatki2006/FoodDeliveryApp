@@ -22,14 +22,54 @@ const STATUS_FILTERS = [
 ];
 
 const STATUS_STYLES = {
-  1: { label: "Pending", bg: "bg-yellow-50", text: "text-yellow-600", dot: "bg-yellow-400" },
-  2: { label: "Confirmed", bg: "bg-blue-50", text: "text-blue-600", dot: "bg-blue-400" },
-  3: { label: "Preparing", bg: "bg-orange-50", text: "text-orange-500", dot: "bg-orange-400" },
-  4: { label: "Ready For Pickup", bg: "bg-purple-50", text: "text-purple-600", dot: "bg-purple-400" },
-  5: { label: "Out For Delivery", bg: "bg-green-50", text: "text-green-600", dot: "bg-green-400" },
-  6: { label: "Delivered", bg: "bg-green-50", text: "text-green-500", dot: "bg-green-400" },
-  7: { label: "Cancelled", bg: "bg-indigo-50", text: "text-indigo-500", dot: "bg-indigo-400" },
-  8: { label: "Failed", bg: "bg-red-50", text: "text-red-500", dot: "bg-red-400" },
+  1: {
+    label: "Pending",
+    bg: "bg-yellow-50",
+    text: "text-yellow-600",
+    dot: "bg-yellow-400",
+  },
+  2: {
+    label: "Confirmed",
+    bg: "bg-blue-50",
+    text: "text-blue-600",
+    dot: "bg-blue-400",
+  },
+  3: {
+    label: "Preparing",
+    bg: "bg-orange-50",
+    text: "text-orange-500",
+    dot: "bg-orange-400",
+  },
+  4: {
+    label: "Ready For Pickup",
+    bg: "bg-purple-50",
+    text: "text-purple-600",
+    dot: "bg-purple-400",
+  },
+  5: {
+    label: "Out For Delivery",
+    bg: "bg-green-50",
+    text: "text-green-600",
+    dot: "bg-green-400",
+  },
+  6: {
+    label: "Delivered",
+    bg: "bg-green-50",
+    text: "text-green-500",
+    dot: "bg-green-400",
+  },
+  7: {
+    label: "Cancelled",
+    bg: "bg-indigo-50",
+    text: "text-indigo-500",
+    dot: "bg-indigo-400",
+  },
+  8: {
+    label: "Failed",
+    bg: "bg-red-50",
+    text: "text-red-500",
+    dot: "bg-red-400",
+  },
 };
 
 const ManageOrders = () => {
@@ -84,7 +124,10 @@ const ManageOrders = () => {
   const handleToggleOpenStatus = async () => {
     try {
       const updatedStatus = !isOpen;
-      await updateOpenStatus({ restaurant_id: restaurantId, is_open: updatedStatus });
+      await updateOpenStatus({
+        restaurant_id: restaurantId,
+        is_open: updatedStatus,
+      });
       setIsOpen(updatedStatus);
       toast.success(updatedStatus ? "Restaurant Opened" : "Restaurant Closed");
     } catch {
@@ -93,9 +136,9 @@ const ManageOrders = () => {
   };
 
   const handleUpdateData = (e, orderId) => {
-    setSelectedStatuses((prev) => ({ 
-      ...prev, 
-      [orderId]: e.target.value 
+    setSelectedStatuses((prev) => ({
+      ...prev,
+      [orderId]: e.target.value,
     }));
   };
 
@@ -124,9 +167,9 @@ const ManageOrders = () => {
     fetchOrderStatuses();
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchRestaurants();
-  },[isOpen])
+  }, [isOpen]);
   useEffect(() => {
     fetchOrders(restaurantId, filterOrderStatusId);
   }, [restaurantId, filterOrderStatusId]);
@@ -134,12 +177,13 @@ const ManageOrders = () => {
   return (
     <div className="min-h-screen bg-orange-50/30 px-4 py-8">
       <div className="mx-auto max-w-6xl">
-
         {/* Header */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Manage Orders</h1>
-            <p className="mt-1 font-medium text-orange-500">View and manage incoming orders</p>
+            <p className="mt-1 font-medium text-orange-500">
+              View and manage incoming orders
+            </p>
           </div>
 
           {/* Restaurant selector + open toggle */}
@@ -158,21 +202,26 @@ const ManageOrders = () => {
             </select>
 
             {restaurantId && (
-              <button
-                onClick={handleToggleOpenStatus}
-                className={`relative w-20 h-9 rounded-full transition-all duration-300 flex-shrink-0 ${
-                  isOpen ? "bg-orange-500" : "bg-gray-200"
-                }`}
-              >
-                <div
-                  className={`absolute top-1 left-1 w-7 h-7 rounded-full bg-white shadow-sm transition-all duration-300 ${
-                    isOpen ? "translate-x-11" : ""
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleToggleOpenStatus}
+                  className={`relative inline-flex items-center w-14 h-7 rounded-full transition-all duration-300 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 ${
+                    isOpen ? "bg-orange-500" : "bg-gray-200"
                   }`}
-                />
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white">
+                  aria-label={isOpen ? "Open" : "Closed"}
+                >
+                  <span
+                    className={`absolute left-1 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                      isOpen ? "translate-x-7" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+                <span
+                  className={`text-sm font-medium ${isOpen ? "text-orange-500" : "text-gray-400"}`}
+                >
                   {isOpen ? "Open" : "Closed"}
                 </span>
-              </button>
+              </div>
             )}
           </div>
         </div>
@@ -198,7 +247,9 @@ const ManageOrders = () => {
         {!restaurantId ? (
           <div className="rounded-3xl border border-dashed border-orange-200 bg-white p-12 text-center">
             <ShoppingBag className="mx-auto mb-4 text-orange-300" size={48} />
-            <p className="font-medium text-gray-500">Select a restaurant to view orders</p>
+            <p className="font-medium text-gray-500">
+              Select a restaurant to view orders
+            </p>
           </div>
         ) : loading ? (
           <div className="flex h-48 items-center justify-center">
@@ -226,11 +277,15 @@ const ManageOrders = () => {
                 >
                   {/* Order header */}
                   <div className="flex items-center justify-between gap-3 mb-4">
-                    <p className="text-sm font-medium text-gray-400">Order #{o.order_id}</p>
+                    <p className="text-sm font-medium text-gray-400">
+                      Order #{o.order_id}
+                    </p>
                     <span
                       className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${status.bg} ${status.text}`}
                     >
-                      <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${status.dot}`}
+                      />
                       {status.label}
                     </span>
                   </div>
@@ -243,8 +298,12 @@ const ManageOrders = () => {
                         className="flex items-center justify-between rounded-2xl border border-orange-50 bg-orange-50/50 px-4 py-3"
                       >
                         <div>
-                          <p className="font-medium text-gray-900 text-sm">{oi.item_name}</p>
-                          <p className="text-xs text-gray-400">₹{oi.item_price}</p>
+                          <p className="font-medium text-gray-900 text-sm">
+                            {oi.item_name}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            ₹{oi.item_price}
+                          </p>
                         </div>
                         <span className="rounded-xl bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
                           ×{oi.quantity}
@@ -257,20 +316,31 @@ const ManageOrders = () => {
                   <div className="flex flex-wrap gap-3 mb-5 text-sm text-gray-500">
                     <span>
                       Subtotal:{" "}
-                      <span className="font-medium text-gray-700">₹{Number(o.subtotal).toFixed(2)}</span>
+                      <span className="font-medium text-gray-700">
+                        ₹{Number(o.subtotal).toFixed(2)}
+                      </span>
                     </span>
                     <span>
                       Tax:{" "}
-                      <span className="font-medium text-gray-700">₹{Number(o.tax_amount).toFixed(2)}</span>
+                      <span className="font-medium text-gray-700">
+                        ₹{Number(o.tax_amount).toFixed(2)}
+                      </span>
                     </span>
                     <span>
                       Delivery:{" "}
-                      <span className="font-medium text-gray-700">₹{Number(o.delivery_fee).toFixed(2)}</span>
+                      <span className="font-medium text-gray-700">
+                        ₹{Number(o.delivery_fee).toFixed(2)}
+                      </span>
                     </span>
                     <span>
                       Total:{" "}
                       <span className="font-semibold text-gray-900">
-                        ₹{(Number(o.subtotal) + Number(o.tax_amount) + Number(o.delivery_fee)).toFixed(2)}
+                        ₹
+                        {(
+                          Number(o.subtotal) +
+                          Number(o.tax_amount) +
+                          Number(o.delivery_fee)
+                        ).toFixed(2)}
                       </span>
                     </span>
                   </div>
@@ -290,14 +360,22 @@ const ManageOrders = () => {
                     >
                       <option value="">Choose updated status</option>
                       {orderStatuses.map((os) => (
-                        <option key={os.order_status_id} value={os.order_status_id}>
+                        <option
+                          key={os.order_status_id}
+                          value={os.order_status_id}
+                        >
                           {os.status_name}
                         </option>
                       ))}
                     </select>
 
                     <button
-                      onClick={() => handleUpdateStatus(o.order_id, selectedStatuses[o.order_id])}
+                      onClick={() =>
+                        handleUpdateStatus(
+                          o.order_id,
+                          selectedStatuses[o.order_id],
+                        )
+                      }
                       className="rounded-full bg-orange-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-orange-600 shadow-sm transition"
                     >
                       Update status

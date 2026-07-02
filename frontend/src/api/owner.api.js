@@ -48,3 +48,6 @@ export const updateOrderStatus=(data)=>{
 export const updateOpenStatus=(data)=>{
   return API.patch("/owner/update-open-status",data);
 }
+export const getMyRestaurantItems=(restaurant_id)=>{
+  return API.get(`/owner/get-my-restaurant-items/${restaurant_id}`);
+}

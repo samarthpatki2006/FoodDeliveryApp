@@ -22,6 +22,8 @@ import Orders from "../components/customer/Orders.jsx";
 import Checkout from "../components/customer/Checkout.jsx";
 import ManageOrders from "../components/owner/ManageOrders.jsx";
 import Home from "../components/customer/CustomerHomePage.jsx";
+import ExploreDishes from "../components/customer/ExploreDishes.jsx";
+import CheckoutItem from "../components/customer/CheckoutForOrder.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -43,6 +45,8 @@ function AppRoutes() {
           <Route path="payments" element={<Payments/>}/>
           <Route path="orders" element={<Orders/>}/>
           <Route path="checkout" element={<Checkout/>}/>
+          <Route path="dishes" element={<ExploreDishes/>}/>
+          <Route path="checkout-item" element={<CheckoutItem/>}/>
         </Route>
       </Route>
 
