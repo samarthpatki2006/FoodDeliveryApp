@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { addAddressDetails, addItemToCart, addReview, deleteCart, deleteCartItem, getMenuItems, getMyOrders, getMyPaymentHistory, getRestaurantsInMyCity, placeOrder, placeOrderFromCart, updateCartQuantity,getAddresses, getMyCarts, getOrderSummaryForCart, getOrderSummary, getPaymentMethods, getRestaurantMenu, getNearbyRestaurants,getInitialRestaurants } from "../controllers/customer.controller.js";
+import { addAddressDetails, addItemToCart, addReview, deleteCart, deleteCartItem, getMenuItems, getMyOrders, getMyPaymentHistory, getRestaurantsInMyCity, placeOrder, placeOrderFromCart, updateCartQuantity,getAddresses, getMyCarts, getOrderSummaryForCart, getOrderSummary, getPaymentMethods, getRestaurantMenu, getNearbyRestaurants,getInitialRestaurants, getorderStats, getMoneyStats, getRestaurantStats, getItemStats, getCuisineStats } from "../controllers/customer.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router=Router();
@@ -23,4 +23,10 @@ router.route("/get-payment-methods").get(verifyJWT,getPaymentMethods);
 router.route("/get-restaurant-menu/:restaurant_id").get(verifyJWT,getRestaurantMenu);
 router.route("/get-nearby-restaurants").get(verifyJWT,getNearbyRestaurants);
 router.route("/get-initial-restaurants").get(verifyJWT,getInitialRestaurants);
+router.route("/get-order-stats").get(verifyJWT,getorderStats);
+router.route("/get-money-stats").get(verifyJWT,getMoneyStats);
+router.route("/get-restaurant-stats").get(verifyJWT,getRestaurantStats);
+router.route("/get-item-stats").get(verifyJWT,getItemStats);
+router.route("/get-cuisine-stats").get(verifyJWT,getCuisineStats);
+
 export default router;

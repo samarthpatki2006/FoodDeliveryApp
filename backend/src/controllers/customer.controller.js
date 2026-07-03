@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import getDeliveryFee from "../utils/deliveryFee.js";
+import computeSplit from "../utils/getRevenueSplit.js";
 import getTaxAmount from "../utils/taxAmount.js";
 import generateSecureRef from "../utils/transactionReference.js";
 
@@ -368,12 +369,13 @@ const placeOrderFromCart = asyncHandler(async (req, res) => {
   );
   
   const totalAmount = itemPrice + delivery_fee + taxAmount;
+  const revenueSplit=computeSplit(itemPrice,delivery_fee);
 
   const [orderResult] = await db.execute(
     `insert into orders
     (user_id,restaurant_id,delivery_address_id,
     payment_method_id,subtotal,total_amount,delivery_fee,
-    tax_amount,special_instructions)
+    tax_amount,special_instructions,restaurant_amount,platform_commission,partner_payout)
     values (?,?,?,?,?,?,?,?,?)`,
     [
       req.user[0].user_id,
@@ -385,6 +387,9 @@ const placeOrderFromCart = asyncHandler(async (req, res) => {
       delivery_fee,
       taxAmount,
       special_instructions.trim()!=="" ? special_instructions.trim():"",
+      revenueSplit.restaurantShare,
+      revenueSplit.platformShare,
+      revenueSplit.partnerShare
     ]
   );
 
@@ -452,8 +457,7 @@ const placeOrder = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Menu item not found");
   }
 
-  const itemPrice =
-    Number(quantity) * Number(menuItem[0].price);
+  const itemPrice=Number(quantity) * Number(menuItem[0].price);
 
   const delivery_fee = await getDeliveryFee(
     delivery_address_id,
@@ -464,15 +468,16 @@ const placeOrder = asyncHandler(async (req, res) => {
     itemPrice + delivery_fee
   );
 
-  const totalAmount =
-    itemPrice + delivery_fee + taxAmount;
+  const totalAmount =itemPrice + delivery_fee + taxAmount;
+
+  const revenueSplit=computeSplit(itemPrice,delivery_fee);
 
   const [orderResult] = await db.execute(
     `insert into orders
     (user_id,restaurant_id,delivery_address_id,
     payment_method_id,subtotal,delivery_fee,
-    tax_amount,total_amount,special_instructions)
-    values (?,?,?,?,?,?,?,?,?)`,
+    tax_amount,total_amount,special_instructions,restaurant_amount,platform_commission,delivery_partner_payout)
+    values (?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       req.user[0].user_id,
       menuItem[0].restaurant_id,
@@ -483,6 +488,9 @@ const placeOrder = asyncHandler(async (req, res) => {
       taxAmount,
       totalAmount,
       special_instructions,
+      revenueSplit.restaurantShare,
+      revenueSplit.platformShare,
+      revenueSplit.partnerShare
     ]
   );
 
@@ -850,4 +858,116 @@ const getInitialRestaurants=asyncHandler(async(req,res)=>{
   }
   res.status(200).json(new ApiResponse(200,data,"Restaurants fetched successfully"));
 })
-export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getAddresses,getMyCarts,getOrderSummaryForCart,getOrderSummary,getPaymentMethods,getRestaurantMenu,getNearbyRestaurants,getInitialRestaurants };
+
+const getorderStats=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="customer"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+
+  const [data]=await db.execute("select order_status_id,count(order_id) as count from orders where user_id=? group by order_status_id",[req.user[0].user_id]);
+
+  const orderStats={
+    deliverd:0,
+    failed:0,
+    active:0
+  }
+
+  data.forEach((order)=>{
+    if(order.order_status_id>=7) orderStats.failed+=order.count;
+    else if(order.order_status_id==6) orderStats.deliverd+=order.count;
+    else orderStats.active+=order.count;
+  })
+
+  res.status(200).json(new ApiResponse(200,orderStats,"Order stats fetched successfully"));
+
+})
+
+const getMoneyStats = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const [data] = await db.execute(
+    `SELECT
+        SUM(total_amount) AS total_amount,
+        AVG(total_amount) AS avg_order_value
+     FROM orders
+     WHERE user_id = ?
+       AND order_status_id = 6`,
+    [req.user[0].user_id]
+  );
+
+  const moneyStats = {
+    total_amount_spent: data[0].total_amount ?? 0,
+    average_order_value: data[0].avg_order_value ?? 0,
+  };
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, moneyStats, "Money stats fetched successfully"));
+});
+
+const getRestaurantStats=asyncHandler(async(req,res)=>{
+  if(req.user[0].role_name!=="customer"){
+    throw new ApiError(401,"Unauthorized request");
+  }
+
+  const [data]=await db.execute("select r.restaurant_id,restaurant_name,count(order_id) as count from orders o join restaurants r on o.restaurant_id=r.restaurant_id where user_id=? group by restaurant_id order by count desc limit 3",[req.user[0].user_id]);
+
+  res.status(200).json(new ApiResponse(200,data,"Restaurant stats fetched"))
+})
+
+const getItemStats = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const [data] = await db.execute(
+    `SELECT
+        mi.menu_item_id,
+        mi.item_name,
+        SUM(oi.quantity) AS total_orders
+     FROM orders o
+     JOIN order_items oi ON o.order_id = oi.order_id
+     JOIN menu_items mi ON oi.menu_item_id = mi.menu_item_id
+     WHERE o.user_id = ?
+       AND o.order_status_id = 6
+     GROUP BY mi.menu_item_id, mi.item_name
+     ORDER BY total_orders DESC
+     LIMIT 3`,
+    [req.user[0].user_id]
+  );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, data, "Item stats fetched successfully"));
+});
+
+const getCuisineStats = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const [data] = await db.execute(
+    `SELECT
+        c.category_id,
+        c.category_name,
+        SUM(oi.quantity) AS total_orders
+     FROM orders o
+     JOIN order_items oi ON o.order_id = oi.order_id
+     JOIN menu_items mi ON oi.menu_item_id = mi.menu_item_id
+     JOIN categories c ON mi.category_id = c.category_id
+     WHERE o.user_id = ?
+       AND o.order_status_id = 6
+     GROUP BY c.category_id, c.category_name
+     ORDER BY total_orders DESC
+     LIMIT 3`,
+    [req.user[0].user_id]
+  );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, data, "Cuisine stats fetched successfully"));
+});
+
+export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getAddresses,getMyCarts,getOrderSummaryForCart,getOrderSummary,getPaymentMethods,getRestaurantMenu,getNearbyRestaurants,getInitialRestaurants,getorderStats,getMoneyStats,getRestaurantStats,getItemStats,getCuisineStats };

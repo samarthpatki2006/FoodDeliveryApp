@@ -77,3 +77,23 @@ export const placeOrder=(data)=>{
 export const addItemToCart=(data)=>{
   return API.post("/customer/add-item-to-cart",data);
 }
+
+export const getOrderStats = () => {
+  return API.get("/customer/get-order-stats");
+};
+
+export const getMoneyStats = () => {
+  return API.get("/customer/get-money-stats");
+};
+
+export const getRestaurantStats = () => {
+  return API.get("/customer/get-restaurant-stats");
+};
+
+export const getItemStats = () => {
+  return API.get("/customer/get-item-stats");
+};
+
+export const getCuisineStats = () => {
+  return API.get("/customer/get-cuisine-stats");
+};

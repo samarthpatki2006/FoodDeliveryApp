@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 const adminNavItems = [
+  {to:"/customer/dashboard1",label:"Dashboard",icon:LayoutDashboard},
   {to:"/customer/dashboard",label:"Home",icon:Home},
   { to: "/customer/dishes", label: "Explore Dishes", icon: BottleWine},
   {to:"/customer/orders",label:"My Orders",icon:ListOrderedIcon},

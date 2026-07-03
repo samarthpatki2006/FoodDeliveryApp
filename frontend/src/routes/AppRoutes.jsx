@@ -27,6 +27,7 @@ import CheckoutItem from "../components/customer/CheckoutForOrder.jsx";
 import UsersManagement from "../components/admin/UserManagement.jsx";
 import RestaurantsManagement from "../components/admin/RestaurantManagement.jsx";
 import NotFound from "../pages/NotFound.jsx";
+import CustomerDashboard from "../components/customer/CustomerDashboard.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -45,6 +46,7 @@ function AppRoutes() {
 
       <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
         <Route path="/customer" element={<Customer />}>
+          <Route path="dashboard1" element={<CustomerDashboard/>}/>
           <Route path="dashboard" element={<Home/>}/>
           <Route path="address" element={<Address/>}/>
           <Route path="cart" element={<Cart/>}/>
