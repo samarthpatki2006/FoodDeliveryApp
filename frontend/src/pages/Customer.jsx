@@ -14,11 +14,11 @@ import {
 
 const adminNavItems = [
   {to:"/customer/dashboard",label:"Home",icon:Home},
-  { to: "/customer/address", label: "Address", icon: HomeIcon },
   { to: "/customer/dishes", label: "Explore Dishes", icon: BottleWine},
   {to:"/customer/orders",label:"My Orders",icon:ListOrderedIcon},
   {to:"/customer/payments",label:"My Payments",icon:IndianRupee},
   {to:"/customer/cart",label:"Cart",icon:ShoppingCart},
+  { to: "/customer/address", label: "Address", icon: HomeIcon },
 ];
 
 const CustomerLayout = () => {

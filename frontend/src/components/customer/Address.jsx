@@ -124,7 +124,7 @@ export const Address = () => {
 
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Add Address Form */}
-          <div className="rounded-3xl border border-orange-100 bg-white p-8 shadow-xl">
+          <div className="rounded-3xl border border-orange-100 bg-white p-8 shadow-sm">
             <h2 className="mb-6 text-2xl font-semibold text-gray-900">
               Add New Address
             </h2>
@@ -216,11 +216,11 @@ export const Address = () => {
                 No saved addresses yet
               </div>
             ) : (
-              <div className="space-y-4 max-h-[460px] overflow-y-auto py-6 rounded-3xl border border-orange-100 px-4 shadow-xl bg-white">
+              <div className="space-y-4 max-h-[460px] overflow-y-auto py-6 rounded-3xl border border-orange-100 px-4 shadow-sm bg-white">
                 {addresses.map((add) => (
                   <div
                     key={add.address_id}
-                    className="relative rounded-3xl border border-orange-100 bg-white p-6 shadow-md transition hover:shadow-xl"
+                    className="relative rounded-3xl border border-orange-100 bg-white p-6 shadow-sm transition hover:shadow-sm"
                   >
                     {/* Edit Button */}
                     <button className="absolute right-5 top-5 rounded-full p-2 text-gray-500 transition hover:bg-orange-100 hover:text-orange-600">

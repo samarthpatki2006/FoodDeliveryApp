@@ -26,12 +26,14 @@ import ExploreDishes from "../components/customer/ExploreDishes.jsx";
 import CheckoutItem from "../components/customer/CheckoutForOrder.jsx";
 import UsersManagement from "../components/admin/UserManagement.jsx";
 import RestaurantsManagement from "../components/admin/RestaurantManagement.jsx";
+import NotFound from "../pages/NotFound.jsx";
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="*" element={<NotFound/>}/>
 
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
         <Route path="/admin" element={<Admin />}>

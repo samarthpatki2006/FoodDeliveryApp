@@ -210,17 +210,17 @@ const Cart = () => {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="flex justify-start">
                     <button
                       onClick={() => placeOrder(cart.cart_id)}
-                      className="mt-4 rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98] tex-sm"
+                      className="mt-4 mr-6 max-w-50 rounded-xl bg-orange-500 px-3 py-2 text-white transition hover:bg-orange-600 active:scale-[0.98] tex-sm"
                     >
                       Place Order
                     </button>
 
                     <button
                       onClick={() => handleDeleteCart(cart.cart_id)}
-                      className="mt-4 rounded-xl bg-red-500 px-4 py-3 font-semibold text-white transition hover:bg-red-600 active:scale-[0.98] text-sm"
+                      className="mt-4 max-w-50 rounded-xl bg-red-500 px-3 py-2 text-white transition hover:bg-red-600 active:scale-[0.98] text-sm"
                     >
                       Delete Cart
                     </button>
