@@ -25,7 +25,7 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex max-h-screen bg-white">
       <Sidebar
         navItems={adminNavItems}
         roleName="Administrator"
