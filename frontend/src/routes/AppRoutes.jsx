@@ -28,12 +28,14 @@ import UsersManagement from "../components/admin/UserManagement.jsx";
 import RestaurantsManagement from "../components/admin/RestaurantManagement.jsx";
 import NotFound from "../pages/NotFound.jsx";
 import CustomerDashboard from "../components/customer/CustomerDashboard.jsx";
+import LandingPage from "../pages/LandingPage.jsx";
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/home" element={<LandingPage />} />
       <Route path="*" element={<NotFound/>}/>
 
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>

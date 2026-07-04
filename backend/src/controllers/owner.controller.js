@@ -385,5 +385,247 @@ const getMyRestaurantItems=asyncHandler(async(req,res)=>{
   }
 
   res.status(200).json(new ApiResponse(200,data,"Items fetched successfully"));
-})
-export { addRestaurantDetails, addLocationDetails, addOperationDetails, addBrandingDetails, getMyRestaurants, getRestaurantImages, addRestaurantCuisines,addMenuItems,getAllCuisines,getAllCategories,getAllOrders,updateOpenStatus,updateOrderStatus,getOrderStatuses,getMyRestaurantItems };
+});
+
+const getRestaurantCount = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "owner") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const [data] = await db.execute(
+    "select COALESCE(count(restaurant_id),0) as count from restaurants where owner_id=?",
+    [req.user[0].user_id]
+  );
+
+  res.status(200).json(new ApiResponse(200, data, "Count fetched"));
+});
+
+const getRevenueStats = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "owner") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const stats = {
+    total_earned: 0,
+    platform_commission: 0,
+  };
+
+  const topPerforming = [];
+
+  const [data] = await db.execute(
+    `SELECT 
+      o.restaurant_id,
+      r.restaurant_name,
+      COALESCE(SUM(o.restaurant_amount), 0) AS total_earned,
+      COALESCE(SUM(o.platform_commission), 0) AS commission
+      FROM orders o
+      JOIN restaurants r
+      ON o.restaurant_id = r.restaurant_id
+      WHERE r.owner_id = ?
+      GROUP BY o.restaurant_id, r.restaurant_name
+      ORDER BY total_earned DESC;`,
+    [req.user[0].user_id]
+  );
+
+  data.forEach((stat) => {
+    stats.total_earned += Number(stat.total_earned);
+    stats.platform_commission += Number(stat.commission);
+    topPerforming.push({
+      restaurant_id: stat.restaurant_id,
+      restaurant_name: stat.restaurant_name,
+      revenue: Number(stat.total_earned),
+    });
+  });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, { stats, topPerforming }, "Stats fetched successfully"));
+});
+
+const getItemStats = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "owner") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const stats = {
+    total_items_sold: 0,
+    total_item_revenue: 0,
+  };
+
+  const topItems = [];
+
+  const [data] = await db.execute(
+    `SELECT
+        oi.menu_item_id,
+        oi.item_name,
+        COALESCE(SUM(oi.quantity), 0) AS total_sold,
+        COALESCE(SUM(oi.quantity * oi.item_price), 0) AS revenue
+     FROM order_items oi
+     JOIN orders o
+       ON oi.order_id = o.order_id
+     JOIN restaurants r
+       ON o.restaurant_id = r.restaurant_id
+     WHERE r.owner_id = ?
+     GROUP BY oi.menu_item_id, oi.item_name
+     ORDER BY total_sold DESC`,
+    [req.user[0].user_id]
+  );
+
+  data.forEach((item) => {
+    stats.total_items_sold += Number(item.total_sold);
+    stats.total_item_revenue += Number(item.revenue);
+
+    topItems.push({
+      menu_item_id: item.menu_item_id,
+      item_name: item.item_name,
+      quantity_sold: Number(item.total_sold),
+      revenue: Number(item.revenue),
+    });
+  });
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        stats,
+        topItems,
+      },
+      "Item stats fetched successfully"
+    )
+  );
+});
+
+const getUniqueCustomer = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "owner") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  // Total unique customers across all restaurants owned by the owner
+  const [[total]] = await db.execute(
+    `SELECT COALESCE(COUNT(DISTINCT o.user_id), 0) AS total_unique_customers
+     FROM orders o
+     JOIN restaurants r
+       ON o.restaurant_id = r.restaurant_id
+     WHERE r.owner_id = ?`,
+    [req.user[0].user_id]
+  );
+
+  // Unique customers per restaurant
+  const [data] = await db.execute(
+    `SELECT
+        r.restaurant_id,
+        r.restaurant_name,
+        COALESCE(COUNT(DISTINCT o.user_id), 0) AS unique_customers
+     FROM restaurants r
+     LEFT JOIN orders o
+       ON r.restaurant_id = o.restaurant_id
+     WHERE r.owner_id = ?
+     GROUP BY r.restaurant_id, r.restaurant_name
+     ORDER BY unique_customers DESC`,
+    [req.user[0].user_id]
+  );
+
+  const topRestaurants = data.map((restaurant) => ({
+    restaurant_id: restaurant.restaurant_id,
+    restaurant_name: restaurant.restaurant_name,
+    unique_customers: Number(restaurant.unique_customers),
+  }));
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        total_unique_customers: Number(total.total_unique_customers),
+        topRestaurants,
+      },
+      "Unique customer stats fetched successfully"
+    )
+  );
+});
+
+const getDetailedRevenueStats = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "owner") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const ownerId = req.user[0].user_id;
+
+  // Daily revenue for current month
+  const [dailyRevenue] = await db.execute(
+    `SELECT
+        DAY(o.created_at) AS day,
+        COALESCE(SUM(o.restaurant_amount), 0) AS revenue
+     FROM orders o
+     JOIN restaurants r
+       ON o.restaurant_id = r.restaurant_id
+     WHERE r.owner_id = ?
+       AND YEAR(o.created_at) = YEAR(CURDATE())
+       AND MONTH(o.created_at) = MONTH(CURDATE())
+     GROUP BY DAY(o.created_at)
+     ORDER BY day`,
+    [ownerId]
+  );
+
+  // Monthly revenue for current year
+  const [monthlyRevenue] = await db.execute(
+    `SELECT
+        MONTH(o.created_at) AS month,
+        COALESCE(SUM(o.restaurant_amount), 0) AS revenue
+     FROM orders o
+     JOIN restaurants r
+       ON o.restaurant_id = r.restaurant_id
+     WHERE r.owner_id = ?
+       AND YEAR(o.created_at) = YEAR(CURDATE())
+     GROUP BY MONTH(o.created_at)
+     ORDER BY month`,
+    [ownerId]
+  );
+
+  // Today's revenue split restaurant-wise
+  const [todayRestaurantRevenue] = await db.execute(
+    `SELECT
+        r.restaurant_id,
+        r.restaurant_name,
+        COALESCE(SUM(o.restaurant_amount), 0) AS revenue
+     FROM restaurants r
+     LEFT JOIN orders o
+       ON r.restaurant_id = o.restaurant_id
+      AND DATE(o.created_at) = CURDATE()
+     WHERE r.owner_id = ?
+     GROUP BY r.restaurant_id, r.restaurant_name
+     ORDER BY revenue DESC`,
+    [ownerId]
+  );
+
+  // Current month's revenue split restaurant-wise
+  const [monthlyRestaurantRevenue] = await db.execute(
+    `SELECT
+        r.restaurant_id,
+        r.restaurant_name,
+        COALESCE(SUM(o.restaurant_amount), 0) AS revenue
+     FROM restaurants r
+     LEFT JOIN orders o
+       ON r.restaurant_id = o.restaurant_id
+      AND YEAR(o.created_at) = YEAR(CURDATE())
+      AND MONTH(o.created_at) = MONTH(CURDATE())
+     WHERE r.owner_id = ?
+     GROUP BY r.restaurant_id, r.restaurant_name
+     ORDER BY revenue DESC`,
+    [ownerId]
+  );
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        dailyRevenue,
+        monthlyRevenue,
+        todayRestaurantRevenue,
+        monthlyRestaurantRevenue,
+      },
+      "Detailed revenue stats fetched successfully"
+    )
+  );
+});
+
+export { addRestaurantDetails, addLocationDetails, addOperationDetails, addBrandingDetails, getMyRestaurants, getRestaurantImages, addRestaurantCuisines,addMenuItems,getAllCuisines,getAllCategories,getAllOrders,updateOpenStatus,updateOrderStatus,getOrderStatuses,getMyRestaurantItems,getRestaurantCount,getRevenueStats,getDetailedRevenueStats,getUniqueCustomer,getItemStats };

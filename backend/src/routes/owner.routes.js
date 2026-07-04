@@ -1,5 +1,9 @@
 import {Router} from "express";
-import { addRestaurantDetails,addLocationDetails,addOperationDetails,addBrandingDetails,getMyRestaurants,getRestaurantImages,addRestaurantCuisines,addMenuItems, getAllCuisines,getAllCategories, getAllOrders, updateOrderStatus, updateOpenStatus, getOrderStatuses, getMyRestaurantItems} from "../controllers/owner.controller.js";
+import { addRestaurantDetails,addLocationDetails,addOperationDetails,addBrandingDetails,getMyRestaurants,getRestaurantImages,addRestaurantCuisines,addMenuItems, getAllCuisines,getAllCategories, getAllOrders, updateOrderStatus, updateOpenStatus, getOrderStatuses, getMyRestaurantItems,getRestaurantCount,
+  getRevenueStats,
+  getItemStats,
+  getUniqueCustomer,
+  getDetailedRevenueStats,} from "../controllers/owner.controller.js";
 import {verifyJWT} from "../middlewares/auth.middleware.js";
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -20,4 +24,9 @@ router.route("/update-order-status").patch(verifyJWT,updateOrderStatus);
 router.route("/update-open-status").patch(verifyJWT,updateOpenStatus);
 router.route("/get-order-statuses").get(verifyJWT,getOrderStatuses);
 router.route("/get-my-restaurant-items/:restaurant_id").get(verifyJWT,getMyRestaurantItems);
+router.route("/restaurant-count").get(verifyJWT, getRestaurantCount);
+router.route("/revenue-stats").get(verifyJWT, getRevenueStats);
+router.route("/item-stats").get(verifyJWT, getItemStats);
+router.route("/customer-stats").get(verifyJWT, getUniqueCustomer);
+router.route("/detailed-revenue-stats").get(verifyJWT, getDetailedRevenueStats);
 export default router;
