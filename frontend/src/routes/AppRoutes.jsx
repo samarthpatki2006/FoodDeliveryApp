@@ -27,12 +27,19 @@ import CheckoutItem from "../components/customer/CheckoutForOrder.jsx";
 import UsersManagement from "../components/admin/UserManagement.jsx";
 import RestaurantsManagement from "../components/admin/RestaurantManagement.jsx";
 import NotFound from "../pages/NotFound.jsx";
+import CustomerDashboard from "../components/customer/CustomerDashboard.jsx";
+import LandingPage from "../pages/LandingPage.jsx";
+import PartnerDashboard from "../components/deliveryPartner/PartnerDashboard.jsx";
+import DeliveryHistory from "../components/deliveryPartner/History.jsx";
+import OrderManagement from "../components/deliveryPartner/OrderManagement.jsx";
+import SetupInfo from "../components/owner/SetupInfo.jsx";
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/home" element={<LandingPage />} />
       <Route path="*" element={<NotFound/>}/>
 
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
@@ -45,6 +52,7 @@ function AppRoutes() {
 
       <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
         <Route path="/customer" element={<Customer />}>
+          <Route path="dashboard1" element={<CustomerDashboard/>}/>
           <Route path="dashboard" element={<Home/>}/>
           <Route path="address" element={<Address/>}/>
           <Route path="cart" element={<Cart/>}/>
@@ -60,6 +68,7 @@ function AppRoutes() {
         <Route path="/owner" element={<Owner />}>
           <Route path="dashboard" element={<OwnerDashboard/>}/>
           <Route path="get-my-restaurants" element={<MyRestaurants />}/>
+          <Route path="setup" element={<SetupInfo/>}/>
           <Route path="add-restaurant-details" element={<RestaurantDetails />}/>
           <Route path="add-location-details" element={<LocationDetails />}/>
           <Route path="add-operation-details" element={<OperationDetails />}/>
@@ -71,7 +80,10 @@ function AppRoutes() {
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={["delivery_partner"]} />}>
-        <Route path="/delivery_partner" element={<DeliveryPartner />}>
+        <Route path="/partner" element={<DeliveryPartner />}>
+          <Route path="dashboard" element={<PartnerDashboard/>}/>
+          <Route path="history" element={<DeliveryHistory/>}/>
+          <Route path="orders" element={<OrderManagement/>}/>
         </Route>
       </Route>
     </Routes>

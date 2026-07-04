@@ -51,3 +51,17 @@ export const updateOpenStatus=(data)=>{
 export const getMyRestaurantItems=(restaurant_id)=>{
   return API.get(`/owner/get-my-restaurant-items/${restaurant_id}`);
 }
+export const getRestaurantCount = () =>
+  API.get("/owner/restaurant-count");
+ 
+export const getRevenueStats = () =>
+  API.get("/owner/revenue-stats");
+ 
+export const getItemStats = () =>
+  API.get("/owner/item-stats");
+ 
+export const getUniqueCustomer = () =>
+  API.get("/owner/customer-stats");
+ 
+export const getDetailedRevenueStats = () =>
+  API.get("/owner/detailed-revenue-stats");
