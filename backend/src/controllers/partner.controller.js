@@ -38,7 +38,7 @@ const getDeliveryHistory=asyncHandler(async(req,res)=>{
     throw new ApiError(401,"Unauthorized request");
   }
 
-  const [data]=await db.execute("select da.*,r.restaurant_name,r.address_line as source_add,r.city as source_city,a.address_line as dest_add,a.city as dest_city,o.delivery_partner_payout as earnings from delivery_assignments da join orders o on ad.order_id=o.order_id join restaurants r on o.restaurant_id=r.restaurant_id join addresses a on o.delivery_address_id=a.address_id where delivery_partner_id=?",[req.user[0].user_id]);
+  const [data]=await db.execute("select da.*,r.restaurant_name,r.address_line as source_add,r.city as source_city,a.address_line as dest_add,a.city as dest_city,o.delivery_partner_payout as earnings from delivery_assignments da join orders o on da.order_id=o.order_id join restaurants r on o.restaurant_id=r.restaurant_id join addresses a on o.delivery_address_id=a.address_id where delivery_partner_id=?",[req.user[0].user_id]);
 
   if(data.length==0){
     throw new ApiError(400,"No data found");
@@ -52,12 +52,12 @@ const getNewAssignments=asyncHandler(async(req,res)=>{
     throw new ApiError(401,"Unauthorized request");
   }
 
-  const [data]=await db.execute("select r.restaurant_name,r.address_line as source_add,r.city as source_city,a.address_line as dest_add,a.city as dest_city,o.delivery_partner_payout as expected_earnings from orders o  join restaurants r on o.restaurant_id=r.restaurant_id join addresses a on o.delivery_address_id=a.address_id where o.order_status_id=2 and order_id not in (select order_id from delivery_assignments)");
+  const [data]=await db.execute("select o.order_id,r.restaurant_name,r.address_line as source_add,r.city as source_city,a.address_line as dest_add,a.city as dest_city,o.delivery_partner_payout as expected_earnings from orders o  join restaurants r on o.restaurant_id=r.restaurant_id join addresses a on o.delivery_address_id=a.address_id where o.order_status_id=2 and order_id not in (select order_id from delivery_assignments)");
 
   if(data.length===0){
     throw new ApiError(400,"No orders found");
   }
-
+  console.log(data);
   res.status(200).json(new ApiResponse(200,data,"Nearby orders fetched"));
 });
 
@@ -70,7 +70,10 @@ const acceptOrder=asyncHandler(async(req,res)=>{
   if(!order_id){
     throw new ApiError(400,"Order id required")
   }
-  await db.execute("insert into delivery_assignments (order_id,delivery_partner_id,assigned_at,assignment_status) values(?,?,?)",[order_id,req.user[0].user_id,NOW(),"accepted"]);
+  await db.execute(
+  "insert into delivery_assignments (order_id, delivery_partner_id, assigned_at, assignment_status) values (?, ?, NOW(), ?)",
+  [order_id, req.user[0].user_id, "accepted"]
+);
 
   res.status(201).json(new ApiResponse(201,{},"Order accepted"));
 });
@@ -169,8 +172,8 @@ const getCurrentOrderDetails = asyncHandler(async (req, res) => {
 
       o.order_id,
       o.total_amount,
-      o.payment_method,
-      o.delivery_instructions,
+      o.payment_method_id,
+      o.special_instructions,
 
       r.restaurant_id,
       r.restaurant_name,
@@ -178,8 +181,6 @@ const getCurrentOrderDetails = asyncHandler(async (req, res) => {
       r.longitude AS restaurant_longitude,
 
       a.address_id,
-      a.full_name,
-      a.phone,
       a.address_line,
       a.city,
       a.state,
@@ -219,7 +220,9 @@ const getCurrentOrderDetails = asyncHandler(async (req, res) => {
   );
 
   order.approx_distance_km = approxDistance;
-
+  order.full_name=req.user[0].full_name;
+  order.phone=req.user[0].phone;
+  console.log(order);
   return res
     .status(200)
     .json(new ApiResponse(200, order, "Current order fetched"));

@@ -20,10 +20,10 @@ export const getCurrentOrderDetails = () => {
   return API.get("/partner/current-order");
 };
 
-export const updateOrderStatus = (order_id, delivery_status) => {
+export const updateOrderStatus = (order_id, status) => {
   return API.patch("/partner/update-order-status", {
     order_id,
-    delivery_status,
+    status,
   });
 };
 

@@ -30,6 +30,8 @@ import NotFound from "../pages/NotFound.jsx";
 import CustomerDashboard from "../components/customer/CustomerDashboard.jsx";
 import LandingPage from "../pages/LandingPage.jsx";
 import PartnerDashboard from "../components/deliveryPartner/PartnerDashboard.jsx";
+import DeliveryHistory from "../components/deliveryPartner/History.jsx";
+import OrderManagement from "../components/deliveryPartner/OrderManagement.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -78,6 +80,8 @@ function AppRoutes() {
       <Route element={<ProtectedRoute allowedRoles={["delivery_partner"]} />}>
         <Route path="/partner" element={<DeliveryPartner />}>
           <Route path="dashboard" element={<PartnerDashboard/>}/>
+          <Route path="history" element={<DeliveryHistory/>}/>
+          <Route path="orders" element={<OrderManagement/>}/>
         </Route>
       </Route>
     </Routes>

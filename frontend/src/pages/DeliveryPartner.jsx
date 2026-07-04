@@ -1,10 +1,12 @@
 import { Outlet, Navigate } from "react-router-dom";
 import Sidebar from "../components/layout/Sidebar.jsx";
 import { useAuth } from "../context/useAuth";
-import { LayoutDashboard } from "lucide-react";
+import { Clock, LayoutDashboard,Clipboard } from "lucide-react";
 
 const partnerNavItems = [
   { to: "/partner/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/partner/history", label: "Delivery History", icon: Clock },
+  { to: "/partner/orders", label: "Order Management", icon: Clipboard },
 ];
 
 const PartnerLayout = () => {
