@@ -29,6 +29,7 @@ import RestaurantsManagement from "../components/admin/RestaurantManagement.jsx"
 import NotFound from "../pages/NotFound.jsx";
 import CustomerDashboard from "../components/customer/CustomerDashboard.jsx";
 import LandingPage from "../pages/LandingPage.jsx";
+import PartnerDashboard from "../components/deliveryPartner/PartnerDashboard.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -75,7 +76,8 @@ function AppRoutes() {
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={["delivery_partner"]} />}>
-        <Route path="/delivery_partner" element={<DeliveryPartner />}>
+        <Route path="/partner" element={<DeliveryPartner />}>
+          <Route path="dashboard" element={<PartnerDashboard/>}/>
         </Route>
       </Route>
     </Routes>

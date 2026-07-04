@@ -26,6 +26,9 @@ app.use("/api/v1/customer",customerRouter);
 import adminRouter from "./routes/admin.routes.js"
 app.use("/api/v1/admin",adminRouter);
 
+import partnerRouter from "./routes/partner.routes.js"
+app.use("/api/v1/partner",partnerRouter);
+
 import  errorHandler from "./middlewares/error.middleware.js";
 app.use(errorHandler);
 
