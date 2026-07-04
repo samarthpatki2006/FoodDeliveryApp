@@ -32,6 +32,7 @@ import LandingPage from "../pages/LandingPage.jsx";
 import PartnerDashboard from "../components/deliveryPartner/PartnerDashboard.jsx";
 import DeliveryHistory from "../components/deliveryPartner/History.jsx";
 import OrderManagement from "../components/deliveryPartner/OrderManagement.jsx";
+import SetupInfo from "../components/owner/SetupInfo.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -67,6 +68,7 @@ function AppRoutes() {
         <Route path="/owner" element={<Owner />}>
           <Route path="dashboard" element={<OwnerDashboard/>}/>
           <Route path="get-my-restaurants" element={<MyRestaurants />}/>
+          <Route path="setup" element={<SetupInfo/>}/>
           <Route path="add-restaurant-details" element={<RestaurantDetails />}/>
           <Route path="add-location-details" element={<LocationDetails />}/>
           <Route path="add-operation-details" element={<OperationDetails />}/>

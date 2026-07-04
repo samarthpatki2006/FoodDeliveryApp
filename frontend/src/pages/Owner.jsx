@@ -14,7 +14,7 @@ const adminNavItems = [
   { to: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/owner/manage-orders", label: "Manage Orders", icon: ClipboardList },
   { to: "/owner/get-my-restaurants", label: "My Restaurants", icon: Building2 },
-  { to: "/owner/add-restaurant-details", label: "Add Restaurant", icon: Plus },
+  { to: "/owner/setup", label: "Add Restaurant", icon: Plus },
   { to: "/owner/manage-cuisines", label: "Manage Cuisines", icon: IceCream },
   { to: "/owner/manage-menu", label: "Manage Menu Items", icon: PizzaIcon },
   
