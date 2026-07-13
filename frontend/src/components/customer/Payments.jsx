@@ -56,7 +56,7 @@ const Payments = () => {
 
   return (
     <div className="min-h-screen bg-orange-50/30 px-4 py-8">
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Payment History</h1>

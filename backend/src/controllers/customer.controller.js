@@ -517,28 +517,105 @@ const placeOrder = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, {}, "Order placed successfully"));
 });
 
-const getMenuItems=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="customer"){
-    throw new ApiError(401,"Unauthorized request");
-  }
-  const {address_id}=req.query;
-  let menuItems;
-  if(address_id){
-    const [rows]=await db.execute("select city from addresses where address_id=?",[address_id]);
-    if(rows.length===0){
-      throw new ApiError(400,"Invalid address id");
+const getMenuItems = asyncHandler(async (req, res) => {
+    if (req.user[0].role_name !== "customer") {
+        throw new ApiError(401, "Unauthorized request");
     }
-    [menuItems]=await db.execute("select r.restaurant_id,restaurant_name,menu_item_id,item_name,cuisine_name,category_name,is_veg,mt.description,price,is_available from menu_items mt join cuisines cu on mt.cuisine_id=cu.cuisine_id join categories ct on mt.category_id=ct.category_id join restaurants r on mt.restaurant_id=r.restaurant_id where r.restaurant_id in (select restaurant_id from restaurants where lower(city)=lower(?))",[rows[0].city]);
-  }
-  else{
-    [menuItems]=await db.execute("select r.restaurant_id,restaurant_name,menu_item_id,item_name,cuisine_name,category_name,is_veg,mt.description,price,is_available from menu_items mt join cuisines cu on mt.cuisine_id=cu.cuisine_id join categories ct on mt.category_id=ct.category_id join restaurants r on mt.restaurant_id=r.restaurant_id where r.restaurant_id in (select restaurant_id from restaurants where lower(city) in (select lower(city) from addresses where user_id=?))",[req.user[0].user_id]);
-  }
 
-  if(menuItems.length===0){
-    throw new ApiError(400,"No Menu Items found")
-  }
-  res.status(200).json(new ApiResponse(200,menuItems,"Menu Items Fetched Successfully"));
-})
+    const { address_id } = req.query;
+    let menuItems;
+
+    if (address_id) {
+        const [rows] = await db.execute(
+            "SELECT city FROM addresses WHERE address_id = ?",
+            [address_id]
+        );
+
+        if (rows.length === 0) {
+            throw new ApiError(400, "Invalid address id");
+        }
+
+        [menuItems] = await db.execute(
+            `SELECT
+                r.restaurant_id,
+                r.restaurant_name,
+                mt.menu_item_id,
+                mt.item_name,
+                cu.cuisine_name,
+                ct.category_name,
+                mt.is_veg,
+                mt.description,
+                mt.price,
+                mt.is_available,
+                mi.image_url
+            FROM menu_items mt
+            JOIN cuisines cu
+                ON mt.cuisine_id = cu.cuisine_id
+            JOIN categories ct
+                ON mt.category_id = ct.category_id
+            JOIN restaurants r
+                ON mt.restaurant_id = r.restaurant_id
+            LEFT JOIN (
+                SELECT m1.menu_item_id, m1.image_url
+                FROM menu_item_images m1
+                WHERE m1.image_id = (
+                    SELECT MIN(m2.image_id)
+                    FROM menu_item_images m2
+                    WHERE m2.menu_item_id = m1.menu_item_id
+                )
+            ) mi
+                ON mt.menu_item_id = mi.menu_item_id
+            WHERE LOWER(r.city) = LOWER(?)`,
+            [rows[0].city]
+        );
+    } else {
+        [menuItems] = await db.execute(
+            `SELECT
+                r.restaurant_id,
+                r.restaurant_name,
+                mt.menu_item_id,
+                mt.item_name,
+                cu.cuisine_name,
+                ct.category_name,
+                mt.is_veg,
+                mt.description,
+                mt.price,
+                mt.is_available,
+                mi.image_url
+            FROM menu_items mt
+            JOIN cuisines cu
+                ON mt.cuisine_id = cu.cuisine_id
+            JOIN categories ct
+                ON mt.category_id = ct.category_id
+            JOIN restaurants r
+                ON mt.restaurant_id = r.restaurant_id
+            LEFT JOIN (
+                SELECT m1.menu_item_id, m1.image_url
+                FROM menu_item_images m1
+                WHERE m1.image_id = (
+                    SELECT MIN(m2.image_id)
+                    FROM menu_item_images m2
+                    WHERE m2.menu_item_id = m1.menu_item_id
+                )
+            ) mi
+                ON mt.menu_item_id = mi.menu_item_id
+            WHERE LOWER(r.city) IN (
+                SELECT LOWER(city)
+                FROM addresses
+                WHERE user_id = ?
+            )`,
+            [req.user[0].user_id]
+        );
+    }
+
+    if (menuItems.length === 0) {
+        throw new ApiError(400, "No Menu Items found");
+    }
+
+    res.status(200).json(
+        new ApiResponse(200, menuItems, "Menu Items Fetched Successfully")
+    );
+});
 
 const addReview=asyncHandler(async(req,res)=>{
   if(req.user[0].role_name!=="customer"){
