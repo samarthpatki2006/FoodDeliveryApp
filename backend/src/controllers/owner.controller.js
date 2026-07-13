@@ -292,7 +292,7 @@ const getAllOrders=asyncHandler(async(req,res)=>{
   }
   const {restaurant_id,order_status_id}=req.query;
   let rows;
-  console.log(order_status_id)
+  
   if(Number(order_status_id)!==0){
     [rows]=await db.execute("select * from orders o join order_items oi on o.order_id=oi.order_id where restaurant_id=? and order_status_id=?",[restaurant_id,order_status_id]);
   }
@@ -628,4 +628,85 @@ const getDetailedRevenueStats = asyncHandler(async (req, res) => {
   );
 });
 
-export { addRestaurantDetails, addLocationDetails, addOperationDetails, addBrandingDetails, getMyRestaurants, getRestaurantImages, addRestaurantCuisines,addMenuItems,getAllCuisines,getAllCategories,getAllOrders,updateOpenStatus,updateOrderStatus,getOrderStatuses,getMyRestaurantItems,getRestaurantCount,getRevenueStats,getDetailedRevenueStats,getUniqueCustomer,getItemStats };
+const getRestaurantReviews = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "owner") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const { restaurant_id } = req.params;
+
+  if (!restaurant_id) {
+    throw new ApiError(400, "Restaurant id is required");
+  }
+
+  // Verify ownership
+  const [restaurant] = await db.execute(
+    `SELECT restaurant_id
+     FROM restaurants
+     WHERE restaurant_id = ?
+     AND owner_id = ?`,
+    [restaurant_id, req.user[0].user_id]
+  );
+
+  if (restaurant.length === 0) {
+    throw new ApiError(
+      403,
+      "You are not authorized to access this restaurant"
+    );
+  }
+
+  const [reviews] = await db.execute(
+    `SELECT
+        rv.review_id,
+        rv.rating,
+        rv.comment,
+        rv.created_at,
+
+        o.order_id,
+        o.total_amount,
+        o.created_at AS order_date,
+
+        u.user_id,
+        u.full_name
+
+     FROM reviews rv
+     JOIN orders o
+        ON rv.order_id = o.order_id
+     JOIN users u
+        ON rv.user_id = u.user_id
+
+     WHERE rv.restaurant_id = ?
+
+     ORDER BY rv.created_at DESC`,
+    [restaurant_id]
+  );
+
+  // Fetch ordered items for every review
+  for (const review of reviews) {
+    const [items] = await db.execute(
+      `SELECT
+          oi.quantity,
+          oi.item_price,
+          mi.item_name
+
+       FROM order_items oi
+       JOIN menu_items mi
+          ON oi.menu_item_id = mi.menu_item_id
+
+       WHERE oi.order_id = ?`,
+      [review.order_id]
+    );
+
+    review.items = items;
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      reviews,
+      "Restaurant reviews fetched successfully"
+    )
+  );
+});
+
+export { addRestaurantDetails, addLocationDetails, addOperationDetails, addBrandingDetails, getMyRestaurants, getRestaurantImages, addRestaurantCuisines,addMenuItems,getAllCuisines,getAllCategories,getAllOrders,updateOpenStatus,updateOrderStatus,getOrderStatuses,getMyRestaurantItems,getRestaurantCount,getRevenueStats,getDetailedRevenueStats,getUniqueCustomer,getItemStats,getRestaurantReviews };

@@ -23,7 +23,6 @@ function ManageCuisines() {
         const response = await getMyRestaurants();
         setRestaurants(response.data.data || []);
       } catch (err) {
-        console.log(err?.response?.data?.message);
         setRestaurants([]);
       }
     };
@@ -33,7 +32,6 @@ function ManageCuisines() {
         const response = await getAllCuisines();
         setCuisines(response.data.data || []);
       } catch (err) {
-        console.log(err?.response?.data?.message);
         setCuisines([]);
       }
     };

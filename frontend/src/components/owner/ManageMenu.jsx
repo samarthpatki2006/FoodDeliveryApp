@@ -65,7 +65,6 @@ function ManageMenu() {
         setMenuImage(null);
       }
     } catch (err) {
-      console.log(err.response.data.message);
       toast.error("Could not add the menu item");
     } finally {
       setIsUploading(false);
@@ -89,7 +88,7 @@ function ManageMenu() {
       if (restaurantMenuId.trim() === "") return;
       const response = await getMyRestaurantItems(restaurantMenuId);
       setMenuItems(response.data.data);
-      console.log(menuItems);
+      
     } catch (err) {
     } finally {
       setMenuLoading(false);

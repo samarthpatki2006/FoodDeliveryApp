@@ -48,7 +48,7 @@ const getRevenueSummary = asyncHandler(async (req, res) => {
      WHERE order_status_id = ?`,
     [6]
   );
-  console.log(data);
+
   return res.status(200).json(
     new ApiResponse(
       200,

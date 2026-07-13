@@ -91,13 +91,13 @@ const getRestaurantsInMyCity = asyncHandler(async (req, res) => {
   const { address_id } = req.query;
   let restaurants;
   if (!address_id) {
-    const [possibleAddresses]=await db.execute("select label,city from addresses where user_id=?",[req.user[0].user_id]);
-    if(possibleAddresses.length===0){
-      [restaurants]=await db.execute("select * from restaurants order by rating desc limit 5");
+    const [possibleAddresses] = await db.execute("select label,city from addresses where user_id=?", [req.user[0].user_id]);
+    if (possibleAddresses.length === 0) {
+      [restaurants] = await db.execute("select * from restaurants order by rating desc limit 5");
     }
-    else{
+    else {
       [restaurants] = await db.execute(
-      "select * from restaurants where lower(city) in (select lower(city) from addresses where user_id=? ) order by rating_avg desc;",[req.user[0].user_id]);
+        "select * from restaurants where lower(city) in (select lower(city) from addresses where user_id=? ) order by rating_avg desc;", [req.user[0].user_id]);
     }
   }
   else {
@@ -107,7 +107,7 @@ const getRestaurantsInMyCity = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Invalid address");
     }
 
-    [restaurants] = await db.execute("select * from restaurants where lower(city)=lower(?) order by rating_avg desc;",[rows[0].city]);
+    [restaurants] = await db.execute("select * from restaurants where lower(city)=lower(?) order by rating_avg desc;", [rows[0].city]);
   }
 
 
@@ -131,12 +131,37 @@ const getMyOrders = asyncHandler(async (req, res) => {
 
   if (order_status_id) {
     [orders] = await db.execute(
-      "select o.*,restaurant_name from orders o join restaurants r on o.restaurant_id=r.restaurant_id where user_id=? and order_status_id=?",
+      `SELECT
+          o.*,
+          r.restaurant_name,
+          rv.review_id,
+          rv.rating,
+          rv.comment,
+          rv.created_at AS review_created_at
+      FROM orders o
+      JOIN restaurants r
+          ON o.restaurant_id = r.restaurant_id
+      LEFT JOIN reviews rv
+          ON rv.order_id = o.order_id
+      WHERE o.user_id = ?
+      AND o.order_status_id = ?`,
       [req.user[0].user_id, Number(order_status_id)]
     );
   } else {
     [orders] = await db.execute(
-      "select o.*,restaurant_name from orders o join restaurants r on o.restaurant_id=r.restaurant_id where user_id=?",
+      `SELECT
+          o.*,
+          r.restaurant_name,
+          rv.review_id,
+          rv.rating,
+          rv.comment,
+          rv.created_at AS review_created_at
+      FROM orders o
+      JOIN restaurants r
+          ON o.restaurant_id = r.restaurant_id
+      LEFT JOIN reviews rv
+          ON rv.order_id = o.order_id
+      WHERE o.user_id = ?`,
       [req.user[0].user_id]
     );
   }
@@ -145,9 +170,9 @@ const getMyOrders = asyncHandler(async (req, res) => {
     throw new ApiError(400, "No orders found");
   }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, orders, "Orders fetched successfully"));
+  return res.status(200).json(
+    new ApiResponse(200, orders, "Orders fetched successfully")
+  );
 });
 
 const getMyPaymentHistory = asyncHandler(async (req, res) => {
@@ -241,10 +266,10 @@ const updateCartQuantity = asyncHandler(async (req, res) => {
   }
 
   const { cart_item_id, cart_id, quantity } = req.body;
-  const [cart]=await db.execute("select cart_id from carts where user_id=? and cart_id=?",[req.user[0].user_id,cart_id]);
+  const [cart] = await db.execute("select cart_id from carts where user_id=? and cart_id=?", [req.user[0].user_id, cart_id]);
 
-  if(cart.length===0){
-    throw new ApiError(400,"Invalid cart");
+  if (cart.length === 0) {
+    throw new ApiError(400, "Invalid cart");
   }
 
   const [cartItem] = await db.execute("select cart_item_id,menu_item_id,quantity from cart_items where cart_item_id=? and cart_id=?", [cart_item_id, cart_id]);
@@ -252,7 +277,7 @@ const updateCartQuantity = asyncHandler(async (req, res) => {
   if (cartItem.length === 0) {
     throw new ApiError(400, "Invalid cart id or cart item does not belong to user");
   }
-  
+
   if (quantity === 0) {
     const [items] = await db.execute("select count(distinct menu_item_id) as count from cart_items where cart_id=?", [cart_id]);
 
@@ -297,8 +322,8 @@ const deleteCart = asyncHandler(async (req, res) => {
   }
 
   const { cart_id } = req.params;
-  if(!cart_id){
-    throw new ApiError(400,"Cart information required");
+  if (!cart_id) {
+    throw new ApiError(400, "Cart information required");
   }
   const [cart] = await db.execute("select user_id,cart_id from carts where user_id=? and cart_id=?", [req.user[0].user_id, cart_id]);
 
@@ -358,7 +383,7 @@ const placeOrderFromCart = asyncHandler(async (req, res) => {
   orderItems.forEach((item) => {
     itemPrice += item.quantity * item.price;
   });
-  
+
   const delivery_fee = await getDeliveryFee(
     delivery_address_id,
     existingCart[0].restaurant_id
@@ -367,9 +392,9 @@ const placeOrderFromCart = asyncHandler(async (req, res) => {
   const taxAmount = await getTaxAmount(
     itemPrice + delivery_fee
   );
-  
+
   const totalAmount = itemPrice + delivery_fee + taxAmount;
-  const revenueSplit=computeSplit(itemPrice,delivery_fee);
+  const revenueSplit = computeSplit(itemPrice, delivery_fee);
 
   const [orderResult] = await db.execute(
     `insert into orders
@@ -386,7 +411,7 @@ const placeOrderFromCart = asyncHandler(async (req, res) => {
       totalAmount,
       delivery_fee,
       taxAmount,
-      special_instructions.trim()!=="" ? special_instructions.trim():"",
+      special_instructions.trim() !== "" ? special_instructions.trim() : "",
       revenueSplit.restaurantShare,
       revenueSplit.platformShare,
       revenueSplit.partnerShare
@@ -419,9 +444,9 @@ const placeOrderFromCart = asyncHandler(async (req, res) => {
     cart_id,
   ]);
 
-  const transactionRef=generateSecureRef();
+  const transactionRef = generateSecureRef();
 
-  await db.execute("insert into payments(order_id,provider,transaction_id,amount,payment_status_id) values(?,?,?,?,?)",[order_id,provider,transactionRef,totalAmount,2]);
+  await db.execute("insert into payments(order_id,provider,transaction_id,amount,payment_status_id) values(?,?,?,?,?)", [order_id, provider, transactionRef, totalAmount, 2]);
 
   return res
     .status(201)
@@ -433,7 +458,7 @@ const placeOrder = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Unauthorized request");
   }
 
-  const { menu_item_id, delivery_address_id, special_instructions, quantity, payment_method_id,provider } = req.body;
+  const { menu_item_id, delivery_address_id, special_instructions, quantity, payment_method_id, provider } = req.body;
 
   const details = [
     menu_item_id,
@@ -457,7 +482,7 @@ const placeOrder = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Menu item not found");
   }
 
-  const itemPrice=Number(quantity) * Number(menuItem[0].price);
+  const itemPrice = Number(quantity) * Number(menuItem[0].price);
 
   const delivery_fee = await getDeliveryFee(
     delivery_address_id,
@@ -468,9 +493,9 @@ const placeOrder = asyncHandler(async (req, res) => {
     itemPrice + delivery_fee
   );
 
-  const totalAmount =itemPrice + delivery_fee + taxAmount;
+  const totalAmount = itemPrice + delivery_fee + taxAmount;
 
-  const revenueSplit=computeSplit(itemPrice,delivery_fee);
+  const revenueSplit = computeSplit(itemPrice, delivery_fee);
 
   const [orderResult] = await db.execute(
     `insert into orders
@@ -508,9 +533,9 @@ const placeOrder = asyncHandler(async (req, res) => {
     ]
   );
 
-  const transactionRef=generateSecureRef();
+  const transactionRef = generateSecureRef();
 
-  await db.execute("insert into payments(order_id,provider,transaction_id,amount,payment_status_id) values(?,?,?,?,?)",[order_id,provider,transactionRef,totalAmount,2]);
+  await db.execute("insert into payments(order_id,provider,transaction_id,amount,payment_status_id) values(?,?,?,?,?)", [order_id, provider, transactionRef, totalAmount, 2]);
 
   return res
     .status(201)
@@ -518,25 +543,25 @@ const placeOrder = asyncHandler(async (req, res) => {
 });
 
 const getMenuItems = asyncHandler(async (req, res) => {
-    if (req.user[0].role_name !== "customer") {
-        throw new ApiError(401, "Unauthorized request");
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const { address_id } = req.query;
+  let menuItems;
+
+  if (address_id) {
+    const [rows] = await db.execute(
+      "SELECT city FROM addresses WHERE address_id = ?",
+      [address_id]
+    );
+
+    if (rows.length === 0) {
+      throw new ApiError(400, "Invalid address id");
     }
 
-    const { address_id } = req.query;
-    let menuItems;
-
-    if (address_id) {
-        const [rows] = await db.execute(
-            "SELECT city FROM addresses WHERE address_id = ?",
-            [address_id]
-        );
-
-        if (rows.length === 0) {
-            throw new ApiError(400, "Invalid address id");
-        }
-
-        [menuItems] = await db.execute(
-            `SELECT
+    [menuItems] = await db.execute(
+      `SELECT
                 r.restaurant_id,
                 r.restaurant_name,
                 mt.menu_item_id,
@@ -566,11 +591,11 @@ const getMenuItems = asyncHandler(async (req, res) => {
             ) mi
                 ON mt.menu_item_id = mi.menu_item_id
             WHERE LOWER(r.city) = LOWER(?)`,
-            [rows[0].city]
-        );
-    } else {
-        [menuItems] = await db.execute(
-            `SELECT
+      [rows[0].city]
+    );
+  } else {
+    [menuItems] = await db.execute(
+      `SELECT
                 r.restaurant_id,
                 r.restaurant_name,
                 mt.menu_item_id,
@@ -604,47 +629,72 @@ const getMenuItems = asyncHandler(async (req, res) => {
                 FROM addresses
                 WHERE user_id = ?
             )`,
-            [req.user[0].user_id]
-        );
-    }
-
-    if (menuItems.length === 0) {
-        throw new ApiError(400, "No Menu Items found");
-    }
-
-    res.status(200).json(
-        new ApiResponse(200, menuItems, "Menu Items Fetched Successfully")
+      [req.user[0].user_id]
     );
+  }
+
+  if (menuItems.length === 0) {
+    throw new ApiError(400, "No Menu Items found");
+  }
+
+  res.status(200).json(
+    new ApiResponse(200, menuItems, "Menu Items Fetched Successfully")
+  );
 });
 
-const addReview=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="customer"){
-    throw new ApiError(401,"Unauthorize request");
+const addReview = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
   }
 
-  const {restaurant_id,order_id,rating,comment}=req.body;
-
-  if(!restaurant_id || !order_id || !rating){
-    throw new ApiError(400,"Missing information");
+  const { order_id, rating, comment } = req.body;
+  
+  if (!order_id || !rating) {
+    throw new ApiError(400, "Missing information");
   }
 
-  const [insertedRows]=await db.execute("insert into reviews (user_id,restaurant_id,order_id,rating,comment) values(?,?,?,?,?) ",[req.user[0].user_id,restaurant_id,order_id,rating,comment.trim()!=="" ? comment.trim() : ""]);
-
-
-  if(insertedRows.length===0){
-    throw new ApiError(500,"Something went wrong");
+  if (rating < 1 || rating > 5) {
+    throw new ApiError(400, "Rating must be between 1 and 5");
   }
 
-  res.status(201).json(new ApiResponse(200,{},"Review added successfully"));
-})
+  const reviewComment = comment?.trim() || "";
 
-const getAddresses=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="customer"){
-    throw new ApiError(401,"Unauthorized request");
+  const [data]=await db.execute("select restaurant_id from orders where order_id=? and order_status_id=6",[order_id]);
+
+  if (data.length===0) {
+    throw new ApiError(400, "Invalid or unauthorized request");
   }
-  const [data]=await db.execute("select * from addresses where user_id=?",[req.user[0].user_id]);
 
-  res.status(200).json(new ApiResponse(200,data,data.length===0?"No addresses found":"Addresses fetched successfully"));
+  const restaurant_id=data[0].restaurant_id;
+  const [result] = await db.execute(
+    `INSERT INTO reviews
+        (user_id, restaurant_id, order_id, rating, comment)
+        VALUES (?, ?, ?, ?, ?)`,
+    [
+      req.user[0].user_id,
+      restaurant_id,
+      order_id,
+      rating,
+      reviewComment
+    ]
+  );
+
+  if (result.affectedRows === 0) {
+    throw new ApiError(500, "Something went wrong");
+  }
+
+  res.status(201).json(
+    new ApiResponse(201, {}, "Review added successfully")
+  );
+});
+
+const getAddresses = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
+  }
+  const [data] = await db.execute("select * from addresses where user_id=?", [req.user[0].user_id]);
+
+  res.status(200).json(new ApiResponse(200, data, data.length === 0 ? "No addresses found" : "Addresses fetched successfully"));
 
 })
 
@@ -700,11 +750,11 @@ const getMyCarts = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, data, "Cart fetched successfully"));
 });
 
-const getOrderSummaryForCart=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="customer"){
-    throw new ApiError(401,"Unauthorized request");
+const getOrderSummaryForCart = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
   }
-  const {cart_id,delivery_address_id}=req.params;
+  const { cart_id, delivery_address_id } = req.params;
   const [existingCart] = await db.execute(
     "select * from carts where cart_id=? and user_id=?",
     [cart_id, req.user[0].user_id]
@@ -738,7 +788,7 @@ const getOrderSummaryForCart=asyncHandler(async(req,res)=>{
   orderItems.forEach((item) => {
     itemPrice += item.quantity * item.price;
   });
-  
+
   const delivery_fee = await getDeliveryFee(
     delivery_address_id,
     existingCart[0].restaurant_id
@@ -747,23 +797,23 @@ const getOrderSummaryForCart=asyncHandler(async(req,res)=>{
   const taxAmount = await getTaxAmount(
     itemPrice + delivery_fee
   );
-  
+
   const totalAmount = itemPrice + delivery_fee + taxAmount;
-  const data={
-    "ItemPrice":itemPrice,
-    "DeliveryFee":delivery_fee,
-    "TaxAmount":taxAmount,
-    "TotalAmount":totalAmount
+  const data = {
+    "ItemPrice": itemPrice,
+    "DeliveryFee": delivery_fee,
+    "TaxAmount": taxAmount,
+    "TotalAmount": totalAmount
   }
-  res.status(200).json(new ApiResponse(200,data,"Summary fetched successfully"));
+  res.status(200).json(new ApiResponse(200, data, "Summary fetched successfully"));
 
 })
 
-const getOrderSummary=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="customer"){
-    throw new ApiError(401,"Unauthorized request");
+const getOrderSummary = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
   }
-  const {menu_item_id,quantity,delivery_address_id}=req.params;
+  const { menu_item_id, quantity, delivery_address_id } = req.params;
   const [menuItem] = await db.execute(
     "select menu_item_id,item_name,restaurant_id,price from menu_items where menu_item_id=?",
     [menu_item_id]
@@ -772,7 +822,7 @@ const getOrderSummary=asyncHandler(async(req,res)=>{
   if (menuItem.length === 0) {
     throw new ApiError(400, "Menu item not found");
   }
-  const itemPrice =Number(quantity) * Number(menuItem[0].price);
+  const itemPrice = Number(quantity) * Number(menuItem[0].price);
 
   const delivery_fee = await getDeliveryFee(
     delivery_address_id,
@@ -783,47 +833,47 @@ const getOrderSummary=asyncHandler(async(req,res)=>{
     itemPrice + delivery_fee
   );
 
-  const totalAmount =itemPrice + delivery_fee + taxAmount;
-  const data={
-    "ItemPrice":itemPrice,
-    "DeliveryFee":delivery_fee,
-    "TaxAmount":taxAmount,
-    "TotalAmount":totalAmount
+  const totalAmount = itemPrice + delivery_fee + taxAmount;
+  const data = {
+    "ItemPrice": itemPrice,
+    "DeliveryFee": delivery_fee,
+    "TaxAmount": taxAmount,
+    "TotalAmount": totalAmount
   }
-  console.log(data);
-  res.status(200).json(new ApiResponse(200,data,"Summary fetched successfully"));
+  
+  res.status(200).json(new ApiResponse(200, data, "Summary fetched successfully"));
 })
 
-const getPaymentMethods=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="customer"){
-    throw new ApiError(401,"Unauthorized request");
+const getPaymentMethods = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
   }
 
-  const [data]=await db.execute("select * from payment_methods");
+  const [data] = await db.execute("select * from payment_methods");
 
-  res.status(200).json(new ApiResponse(200,data,"Payment methods fetched"));
+  res.status(200).json(new ApiResponse(200, data, "Payment methods fetched"));
 })
 
-const getRestaurantMenu=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="customer"){
-    throw new ApiError(401,"nauthorized request");
+const getRestaurantMenu = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "nauthorized request");
   }
 
-  const {restaurant_id}=req.params;
+  const { restaurant_id } = req.params;
 
-  const [data]=await db.execute(`SELECT
+  const [data] = await db.execute(`SELECT
     mt.*,
     mi.image_url
 FROM menu_items mt
 LEFT JOIN menu_item_images mi
     ON mt.menu_item_id = mi.menu_item_id
-WHERE mt.restaurant_id = ?`,[restaurant_id]);
+WHERE mt.restaurant_id = ?`, [restaurant_id]);
 
-  if(data.length===0){
-    throw new ApiError(400,"No menu items found");
+  if (data.length === 0) {
+    throw new ApiError(400, "No menu items found");
   }
-  console.log(data);
-  res.status(200).json(new ApiResponse(200,data,"Menu items fetched successfully"));
+  s
+  res.status(200).json(new ApiResponse(200, data, "Menu items fetched successfully"));
 })
 
 const getNearbyRestaurants = asyncHandler(async (req, res) => {
@@ -924,38 +974,38 @@ const getNearbyRestaurants = asyncHandler(async (req, res) => {
     );
 });
 
-const getInitialRestaurants=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="customer"){
-    throw new ApiError(401,"Unauthorized request");
+const getInitialRestaurants = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
   }
-  const [data]=await db.execute("select * from restaurants where lower(city) in (select lower(city) from addresses where user_id=?)",[req.user[0].user_id]);
+  const [data] = await db.execute("select * from restaurants where lower(city) in (select lower(city) from addresses where user_id=?)", [req.user[0].user_id]);
 
-  if(data.length===0){
-    throw new ApiError(400,"No restaurants found");
+  if (data.length === 0) {
+    throw new ApiError(400, "No restaurants found");
   }
-  res.status(200).json(new ApiResponse(200,data,"Restaurants fetched successfully"));
+  res.status(200).json(new ApiResponse(200, data, "Restaurants fetched successfully"));
 })
 
-const getorderStats=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="customer"){
-    throw new ApiError(401,"Unauthorized request");
+const getorderStats = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
   }
 
-  const [data]=await db.execute("select order_status_id,count(order_id) as count from orders where user_id=? group by order_status_id",[req.user[0].user_id]);
+  const [data] = await db.execute("select order_status_id,count(order_id) as count from orders where user_id=? group by order_status_id", [req.user[0].user_id]);
 
-  const orderStats={
-    deliverd:0,
-    failed:0,
-    active:0
+  const orderStats = {
+    deliverd: 0,
+    failed: 0,
+    active: 0
   }
 
-  data.forEach((order)=>{
-    if(order.order_status_id>=7) orderStats.failed+=order.count;
-    else if(order.order_status_id==6) orderStats.deliverd+=order.count;
-    else orderStats.active+=order.count;
+  data.forEach((order) => {
+    if (order.order_status_id >= 7) orderStats.failed += order.count;
+    else if (order.order_status_id == 6) orderStats.deliverd += order.count;
+    else orderStats.active += order.count;
   })
 
-  res.status(200).json(new ApiResponse(200,orderStats,"Order stats fetched successfully"));
+  res.status(200).json(new ApiResponse(200, orderStats, "Order stats fetched successfully"));
 
 })
 
@@ -984,14 +1034,14 @@ const getMoneyStats = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, moneyStats, "Money stats fetched successfully"));
 });
 
-const getRestaurantStats=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="customer"){
-    throw new ApiError(401,"Unauthorized request");
+const getRestaurantStats = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "customer") {
+    throw new ApiError(401, "Unauthorized request");
   }
 
-  const [data]=await db.execute("select r.restaurant_id,restaurant_name,count(order_id) as count from orders o join restaurants r on o.restaurant_id=r.restaurant_id where user_id=? group by restaurant_id order by count desc limit 3",[req.user[0].user_id]);
+  const [data] = await db.execute("select r.restaurant_id,restaurant_name,count(order_id) as count from orders o join restaurants r on o.restaurant_id=r.restaurant_id where user_id=? group by restaurant_id order by count desc limit 3", [req.user[0].user_id]);
 
-  res.status(200).json(new ApiResponse(200,data,"Restaurant stats fetched"))
+  res.status(200).json(new ApiResponse(200, data, "Restaurant stats fetched"))
 })
 
 const getItemStats = asyncHandler(async (req, res) => {
@@ -1047,4 +1097,4 @@ const getCuisineStats = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, data, "Cuisine stats fetched successfully"));
 });
 
-export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity,getMenuItems,addReview,getAddresses,getMyCarts,getOrderSummaryForCart,getOrderSummary,getPaymentMethods,getRestaurantMenu,getNearbyRestaurants,getInitialRestaurants,getorderStats,getMoneyStats,getRestaurantStats,getItemStats,getCuisineStats };
+export { addAddressDetails, getRestaurantsInMyCity, getMyOrders, getMyPaymentHistory, addItemToCart, placeOrderFromCart, placeOrder, deleteCart, deleteCartItem, updateCartQuantity, getMenuItems, addReview, getAddresses, getMyCarts, getOrderSummaryForCart, getOrderSummary, getPaymentMethods, getRestaurantMenu, getNearbyRestaurants, getInitialRestaurants, getorderStats, getMoneyStats, getRestaurantStats, getItemStats, getCuisineStats };

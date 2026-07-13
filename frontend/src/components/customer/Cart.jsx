@@ -30,7 +30,7 @@ const Cart = () => {
   const handleUpdateCartQty = async (cartId,cartItemId, newQty) => {
     try{
       const data={"cart_id":cartId,"cart_item_id":cartItemId,"quantity":newQty};
-      console.log(data);
+      
       const response=await updateCartQuantity(data);
       fetchCart();
     }
@@ -53,13 +53,13 @@ const Cart = () => {
 
   // TODO: implement place order
   const placeOrder = async (cartId) => {
-    console.log(cartId);
+
     navigate("/customer/checkout", { state: { cartId } });
   };
 
   const handleDeleteCart = async (cart_id) => {
     try{
-      // console.log(cart_id)
+      
       const response=await deleteCart(cart_id);
       if(response.status<300){
         toast.success("Cart deleted successfully");
@@ -67,7 +67,7 @@ const Cart = () => {
       fetchCart();
     }
     catch(err){
-      console.log(err.response.data.message)
+      
       toast.error("Failed to delete cart");
     }
   };

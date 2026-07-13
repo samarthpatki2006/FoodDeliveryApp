@@ -62,7 +62,6 @@ function LocationDetails() {
           pincode: "",
         });
       } catch (err) {
-        console.log(err.response.data.message);
         setRestaurants(null);
       }
     };

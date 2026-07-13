@@ -244,7 +244,7 @@ export default function OrderManagement() {
   const loadAssignments = useCallback(async () => {
     try {
       const res = await getNewAssignments();
-      console.log(res)
+      
       const data = res.data?.data ?? res.data ?? [];
       return Array.isArray(data) ? data : [];
     } catch (err) {
@@ -303,7 +303,7 @@ export default function OrderManagement() {
     const nextStatus = isPickedUp ? "delivered" : "picked_up";
     try {
       const res=await updateOrderStatus(order_id, nextStatus);
-      console.log(res)
+      
       if (nextStatus === "delivered") {
         setCurrentOrder(null);
         setAssignments(await loadAssignments());

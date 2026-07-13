@@ -34,7 +34,7 @@ function RestaurantDetails() {
         navigate("/owner/add-location-details", { replace: true });
       }
     } catch (err) {
-      console.log(err);
+    
       const errorMsg = err?.response?.data?.message || "Something went wrong";
       toast.error(errorMsg);
     }
