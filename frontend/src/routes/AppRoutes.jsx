@@ -33,6 +33,7 @@ import PartnerDashboard from "../components/deliveryPartner/PartnerDashboard.jsx
 import DeliveryHistory from "../components/deliveryPartner/History.jsx";
 import OrderManagement from "../components/deliveryPartner/OrderManagement.jsx";
 import SetupInfo from "../components/owner/SetupInfo.jsx";
+import RestaurantReviews from "../components/owner/ReviewMangement.jsx";
 function AppRoutes() {
   return (
     <Routes>
@@ -76,6 +77,7 @@ function AppRoutes() {
           <Route path="manage-cuisines" element={<ManageCuisines/>}/>
           <Route path="manage-menu" element={<ManageMenu/>}/>
           <Route path="manage-orders" element={<ManageOrders/>}/>
+          <Route path="reviews" element={<RestaurantReviews/>}/>
         </Route>
       </Route>
 

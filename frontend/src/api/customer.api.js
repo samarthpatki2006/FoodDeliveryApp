@@ -66,7 +66,6 @@ export const getMenuItems=(address_id)=>{
 }
 
 export const getOrderSummary=(data)=>{
-  console.log(data)
   return API.get(`/customer/get-order-summary/${data.menu_item_id}/${data.quantity}/${data.delivery_address_id}`);
 }
 
@@ -97,3 +96,7 @@ export const getItemStats = () => {
 export const getCuisineStats = () => {
   return API.get("/customer/get-cuisine-stats");
 };
+
+export const addReview=(data)=>{
+  return API.post("/customer/give-review",data);
+}

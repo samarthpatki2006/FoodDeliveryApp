@@ -136,7 +136,7 @@ const Home = () => {
       const res = await getRestaurantsInMyCity(selectedAddressId || undefined);
       if (res.status < 300) {
         setRestaurants(res.data.data);
-        console.log(res.data.data);
+        
       } else setError(res.data?.message || "No restaurants found.");
     } catch (e) {
       setError(e?.response?.data?.message || "Failed to fetch restaurants.");

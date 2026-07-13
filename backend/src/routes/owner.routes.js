@@ -3,7 +3,8 @@ import { addRestaurantDetails,addLocationDetails,addOperationDetails,addBranding
   getRevenueStats,
   getItemStats,
   getUniqueCustomer,
-  getDetailedRevenueStats,} from "../controllers/owner.controller.js";
+  getDetailedRevenueStats,
+  getRestaurantReviews,} from "../controllers/owner.controller.js";
 import {verifyJWT} from "../middlewares/auth.middleware.js";
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -29,4 +30,5 @@ router.route("/revenue-stats").get(verifyJWT, getRevenueStats);
 router.route("/item-stats").get(verifyJWT, getItemStats);
 router.route("/customer-stats").get(verifyJWT, getUniqueCustomer);
 router.route("/detailed-revenue-stats").get(verifyJWT, getDetailedRevenueStats);
+router.route("/get-customer-reviews/:restaurant_id").get(verifyJWT,getRestaurantReviews)
 export default router;

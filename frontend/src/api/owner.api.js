@@ -65,3 +65,6 @@ export const getUniqueCustomer = () =>
  
 export const getDetailedRevenueStats = () =>
   API.get("/owner/detailed-revenue-stats");
+
+export const getRestaurantReviews=(restaurant_id)=>
+  API.get(`/owner/get-customer-reviews/${restaurant_id}`);

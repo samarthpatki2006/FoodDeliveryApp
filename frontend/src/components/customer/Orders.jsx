@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { ShoppingBag, ChevronRight, FilterX } from "lucide-react";
-import { getMyOrders } from "../../api/customer.api";
+import { ShoppingBag, ChevronRight, FilterX, Star, X, StarCheck } from "lucide-react";
+import { getMyOrders, addReview } from "../../api/customer.api";
 
 const STATUS_FILTERS = [
   { label: "All", value: "" },
@@ -67,11 +67,22 @@ const STATUS_STYLES = {
   },
 };
 
+// Order status id that represents a delivered order.
+// The "Add Review" action is only ever shown for orders with this status.
+const DELIVERED_STATUS_ID = 6;
+
 const Orders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("");
+
+  // Review modal state
+  const [reviewOrder, setReviewOrder] = useState(null); // order object currently being reviewed
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewHoverRating, setReviewHoverRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     fetchOrders(activeFilter);
@@ -104,6 +115,45 @@ const Orders = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const openReviewModal = (e, order) => {
+    e.stopPropagation(); // don't trigger the card's navigate-to-details click
+    setReviewOrder(order);
+    setReviewRating(0);
+    setReviewHoverRating(0);
+    setReviewComment("");
+  };
+
+  const closeReviewModal = () => {
+    if (submittingReview) return;
+    setReviewOrder(null);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewRating) {
+      toast.error("Please select a rating");
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const res = await addReview({
+        order_id: reviewOrder.order_id,
+        rating: reviewRating,
+        comment: reviewComment,
+      });
+      if (res?.data?.success) {
+        toast.success("Review submitted successfully");
+        setReviewOrder(null);
+      } else {
+        toast.error(res?.data?.message || "Failed to submit review");
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   return (
@@ -162,11 +212,11 @@ const Orders = () => {
                 text: "text-gray-500",
                 dot: "bg-gray-400",
               };
+              const isDelivered = order.order_status_id === DELIVERED_STATUS_ID;
 
               return (
                 <div
                   key={order.order_id}
-                  onClick={() => navigate(`/customer/orders/${order.order_id}`)}
                   className="cursor-pointer rounded-2xl border border-orange-100 bg-white px-5 py-4 transition hover:border-orange-200 hover:shadow-sm active:scale-[0.99]"
                 >
                   {/* Top row: restaurant + status badge */}
@@ -215,12 +265,98 @@ const Orders = () => {
                       "{order.special_instructions}"
                     </p>
                   )}
+
+                  {/* Add Review — delivered orders only */}
+                  {isDelivered && (
+                    <div className="mt-3 border-t border-orange-50 pt-3">
+                      {order.review_id==null ?<button
+                        onClick={(e) => openReviewModal(e, order)}
+                        className="flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-500 transition hover:bg-orange-100"
+                      >
+                        <Star size={18} />
+                        Add Review
+                      </button>
+                      : 
+                      <button
+                        className="flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-500 transition hover:bg-orange-100"
+                      >
+                        <StarCheck size={18} />
+                        Review Submitted
+                      </button>
+                      }
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Review Modal */}
+      {reviewOrder && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={closeReviewModal}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">
+                Review {reviewOrder.restaurant_name}
+              </h2>
+              <button
+                onClick={closeReviewModal}
+                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Star rating */}
+            <div className="mb-4 flex items-center justify-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setReviewRating(star)}
+                  onMouseEnter={() => setReviewHoverRating(star)}
+                  onMouseLeave={() => setReviewHoverRating(0)}
+                  className="p-0.5"
+                >
+                  <Star
+                    size={28}
+                    className={
+                      star <= (reviewHoverRating || reviewRating)
+                        ? "fill-orange-400 text-orange-400"
+                        : "fill-transparent text-gray-300"
+                    }
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* Comment */}
+            <textarea
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              placeholder="Share your experience (optional)"
+              rows={4}
+              className="mb-4 w-full resize-none rounded-2xl border border-orange-100 px-4 py-3 text-sm text-gray-700 outline-none focus:border-orange-300"
+            />
+
+            <button
+              onClick={handleSubmitReview}
+              disabled={submittingReview}
+              className="w-full rounded-full bg-orange-500 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:opacity-60"
+            >
+              {submittingReview ? "Submitting..." : "Submit Review"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

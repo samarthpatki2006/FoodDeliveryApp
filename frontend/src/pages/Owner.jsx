@@ -8,6 +8,7 @@ import {
   IceCream,
   PizzaIcon,
   ClipboardList,
+  List,
 } from "lucide-react";
 
 const adminNavItems = [
@@ -17,6 +18,7 @@ const adminNavItems = [
   { to: "/owner/setup", label: "Add Restaurant", icon: Plus },
   { to: "/owner/manage-cuisines", label: "Manage Cuisines", icon: IceCream },
   { to: "/owner/manage-menu", label: "Manage Menu Items", icon: PizzaIcon },
+  { to:"/owner/reviews",label:"View Reviews",icon:List}
   
 ];
 

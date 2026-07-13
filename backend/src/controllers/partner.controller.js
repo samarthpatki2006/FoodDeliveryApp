@@ -57,7 +57,7 @@ const getNewAssignments=asyncHandler(async(req,res)=>{
   if(data.length===0){
     throw new ApiError(400,"No orders found");
   }
-  console.log(data);
+  
   res.status(200).json(new ApiResponse(200,data,"Nearby orders fetched"));
 });
 
@@ -222,7 +222,6 @@ const getCurrentOrderDetails = asyncHandler(async (req, res) => {
   order.approx_distance_km = approxDistance;
   order.full_name=req.user[0].full_name;
   order.phone=req.user[0].phone;
-  console.log(order);
   return res
     .status(200)
     .json(new ApiResponse(200, order, "Current order fetched"));

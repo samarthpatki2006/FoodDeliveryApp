@@ -76,10 +76,6 @@ function MyRestaurants() {
                     DEFAULT_LOGO,
                 };
               } catch (err) {
-                console.log(
-                  `Failed to fetch images for restaurant ${restaurant.restaurant_id}`
-                );
-
                 imageMap[
                   restaurant.restaurant_id
                 ] = {
@@ -97,7 +93,7 @@ function MyRestaurants() {
           imageMap
         );
       } catch (err) {
-        console.log(err);
+        
       } finally {
         setLoading(false);
       }
