@@ -55,7 +55,7 @@ function Login() {
     } else if (user?.role_name === "customer") {
       navigate("/customer/dashboard", { replace: true });
     } else if (user?.role_name === "delivery_partner") {
-      navigate("/delivery_partner/dashboard",{replace:true});
+      navigate("/partner/dashboard",{replace:true});
     }
   }, [user, loading, navigate]);
 

@@ -104,7 +104,7 @@ const Sidebar = ({ navItems = [], roleName = "User" }) => {
       <div className="md:hidden fixed top-4 left-4 z-[60]">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white border border-orange-200 text-orange-500 shadow-lg"
+          className="flex items-center justify-center w-8 h-8 rounded-2xl bg-white border border-orange-200 text-orange-500 shadow-lg opacity-[0.7]"
         >
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>

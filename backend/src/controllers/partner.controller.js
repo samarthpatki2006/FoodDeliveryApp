@@ -4,6 +4,16 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import calculateDistance from "../utils/getDistance.js";
 
+// Internal helper (not a route handler) so it can be reused by acceptOrder
+const setPartnerActiveStatus = async (userId, isActive) => {
+  await db.execute(
+    `UPDATE users
+     SET is_active = ?
+     WHERE user_id = ?`,
+    [isActive, userId]
+  );
+};
+
 const togglePartnerAvailability = asyncHandler(async (req, res) => {
   if (req.user[0].role_name !== "delivery_partner") {
     throw new ApiError(401, "Unauthorized request");
@@ -15,12 +25,7 @@ const togglePartnerAvailability = asyncHandler(async (req, res) => {
     throw new ApiError(400, "is_active must be a boolean");
   }
 
-  await db.execute(
-    `UPDATE users
-     SET is_active = ?
-     WHERE user_id = ?`,
-    [is_active, req.user[0].user_id]
-  );
+  await setPartnerActiveStatus(req.user[0].user_id, is_active);
 
   res.status(200).json(
     new ApiResponse(
@@ -33,49 +38,51 @@ const togglePartnerAvailability = asyncHandler(async (req, res) => {
   );
 });
 
-const getDeliveryHistory=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="delivery_partner"){
-    throw new ApiError(401,"Unauthorized request");
+const getDeliveryHistory = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "delivery_partner") {
+    throw new ApiError(401, "Unauthorized request");
   }
 
-  const [data]=await db.execute("select da.*,r.restaurant_name,r.address_line as source_add,r.city as source_city,a.address_line as dest_add,a.city as dest_city,o.delivery_partner_payout as earnings from delivery_assignments da join orders o on da.order_id=o.order_id join restaurants r on o.restaurant_id=r.restaurant_id join addresses a on o.delivery_address_id=a.address_id where delivery_partner_id=?",[req.user[0].user_id]);
+  const [data] = await db.execute("select da.*,r.restaurant_name,r.address_line as source_add,r.city as source_city,a.address_line as dest_add,a.city as dest_city,o.delivery_partner_payout as earnings from delivery_assignments da join orders o on da.order_id=o.order_id join restaurants r on o.restaurant_id=r.restaurant_id join addresses a on o.delivery_address_id=a.address_id where delivery_partner_id=?", [req.user[0].user_id]);
 
-  if(data.length==0){
-    throw new ApiError(400,"No data found");
+  if (data.length == 0) {
+    throw new ApiError(400, "No data found");
   }
 
-  res.status(200).json(new ApiResponse(200,data,"History fetched successfully"));
+  res.status(200).json(new ApiResponse(200, data, "History fetched successfully"));
 });
 
-const getNewAssignments=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="delivery_partner"){
-    throw new ApiError(401,"Unauthorized request");
+const getNewAssignments = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "delivery_partner") {
+    throw new ApiError(401, "Unauthorized request");
   }
 
-  const [data]=await db.execute("select o.order_id,r.restaurant_name,r.address_line as source_add,r.city as source_city,a.address_line as dest_add,a.city as dest_city,o.delivery_partner_payout as expected_earnings from orders o  join restaurants r on o.restaurant_id=r.restaurant_id join addresses a on o.delivery_address_id=a.address_id where o.order_status_id=2 and order_id not in (select order_id from delivery_assignments)");
+  const [data] = await db.execute("select o.order_id,r.restaurant_name,r.address_line as source_add,r.city as source_city,a.address_line as dest_add,a.city as dest_city,o.delivery_partner_payout as expected_earnings from orders o  join restaurants r on o.restaurant_id=r.restaurant_id join addresses a on o.delivery_address_id=a.address_id where o.order_status_id=2 and order_id not in (select order_id from delivery_assignments)");
 
-  if(data.length===0){
-    throw new ApiError(400,"No orders found");
+  if (data.length === 0) {
+    throw new ApiError(400, "No orders found");
   }
-  
-  res.status(200).json(new ApiResponse(200,data,"Nearby orders fetched"));
+
+  res.status(200).json(new ApiResponse(200, data, "Nearby orders fetched"));
 });
 
-const acceptOrder=asyncHandler(async(req,res)=>{
-  if(req.user[0].role_name!=="delivery_partner"){
-    throw new ApiError(401,"Unauthorized request");
+const acceptOrder = asyncHandler(async (req, res) => {
+  if (req.user[0].role_name !== "delivery_partner") {
+    throw new ApiError(401, "Unauthorized request");
   }
 
-  const {order_id}=req.body;
-  if(!order_id){
-    throw new ApiError(400,"Order id required")
+  const { order_id } = req.body;
+  if (!order_id) {
+    throw new ApiError(400, "Order id required")
   }
   await db.execute(
-  "insert into delivery_assignments (order_id, delivery_partner_id, assigned_at, assignment_status) values (?, ?, NOW(), ?)",
-  [order_id, req.user[0].user_id, "accepted"]
-);
+    "insert into delivery_assignments (order_id, delivery_partner_id, assigned_at, assignment_status) values (?, ?, NOW(), ?)",
+    [order_id, req.user[0].user_id, "accepted"]
+  );
 
-  res.status(201).json(new ApiResponse(201,{},"Order accepted"));
+  await setPartnerActiveStatus(req.user[0].user_id, false);
+
+  res.status(201).json(new ApiResponse(201, {}, "Order accepted"));
 });
 
 const updateOrderStatus = asyncHandler(async (req, res) => {
@@ -91,16 +98,13 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
   const status = delivery_status.trim();
 
-  if (status !== "picked_up" && status !== "delivered") {
+  if (status !== "out_for_delivery" && status !== "delivered") {
     throw new ApiError(400, "Invalid status");
   }
 
-  // Check assignment
   const [assignment] = await db.execute(
-    `SELECT assignment_status
-     FROM delivery_assignments
-     WHERE order_id = ?
-       AND delivery_partner_id = ?`,
+    `SELECT assignment_status FROM delivery_assignments
+     WHERE order_id = ? AND delivery_partner_id = ?`,
     [order_id, req.user[0].user_id]
   );
 
@@ -108,54 +112,31 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Assignment not found");
   }
 
-  // Prevent invalid transitions
-  if (
-    status === "picked_up" &&
-    assignment[0].assignment_status !== "accepted"
-  ) {
-    throw new ApiError(400, "Order has already been picked up.");
+  if (status === "out_for_delivery") {
+    throw new ApiError(400, "Order has already moved past 'accepted'.");
   }
 
-  if (
-    status === "delivered" &&
-    assignment[0].assignment_status !== "picked_up"
-  ) {
-    throw new ApiError(400, "Order must be picked up first.");
+  if (status === "delivered" && assignment[0].assignment_status !== "out_for_delivery") {
+    throw new ApiError(400, "Order must be out for delivery first.");
   }
 
-  if (status === "picked_up") {
+  if (status === "out_for_delivery") {
+    await db.execute("UPDATE orders SET order_status_id=? WHERE order_id=?", [5, order_id]);
     await db.execute(
-      "UPDATE orders SET order_status_id=? WHERE order_id=?",
-      [5, order_id]
-    );
-
-    await db.execute(
-      `UPDATE delivery_assignments
-       SET picked_at = NOW(),
-           assignment_status = ?
-       WHERE order_id = ?
-         AND delivery_partner_id = ?`,
-      ["picked_up", order_id, req.user[0].user_id]
+      `UPDATE delivery_assignments SET picked_at = NOW(), assignment_status = ?
+       WHERE order_id = ? AND delivery_partner_id = ?`,
+      ["out_for_delivery", order_id, req.user[0].user_id]
     );
   } else {
+    await db.execute("UPDATE orders SET order_status_id=? WHERE order_id=?", [6, order_id]);
     await db.execute(
-      "UPDATE orders SET order_status_id=? WHERE order_id=?",
-      [6, order_id]
-    );
-
-    await db.execute(
-      `UPDATE delivery_assignments
-       SET delivered_at = NOW(),
-           assignment_status = ?
-       WHERE order_id = ?
-         AND delivery_partner_id = ?`,
+      `UPDATE delivery_assignments SET delivered_at = NOW(), assignment_status = ?
+       WHERE order_id = ? AND delivery_partner_id = ?`,
       ["delivered", order_id, req.user[0].user_id]
     );
   }
 
-  res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Status updated successfully"));
+  res.status(200).json(new ApiResponse(200, {}, "Status updated successfully"));
 });
 
 const getCurrentOrderDetails = asyncHandler(async (req, res) => {
@@ -166,41 +147,27 @@ const getCurrentOrderDetails = asyncHandler(async (req, res) => {
   const deliveryPartnerId = req.user[0].user_id;
 
   const [data] = await db.execute(
-    `
-    SELECT
-      da.assignment_id,
 
-      o.order_id,
-      o.total_amount,
-      o.payment_method_id,
-      o.special_instructions,
-
-      r.restaurant_id,
-      r.restaurant_name,
-      r.latitude AS restaurant_latitude,
-      r.longitude AS restaurant_longitude,
-
-      a.address_id,
-      a.address_line,
-      a.city,
-      a.state,
-      a.pincode,
-      a.latitude AS customer_latitude,
-      a.longitude AS customer_longitude
-
-    FROM delivery_assignments da
-    JOIN orders o
-      ON da.order_id = o.order_id
-    JOIN restaurants r
-      ON o.restaurant_id = r.restaurant_id
-    JOIN addresses a
-      ON o.delivery_address_id = a.address_id
-
-    WHERE da.delivery_partner_id = ?
-      AND da.assignment_status IN ('accepted','picked_up')
-
-    LIMIT 1
-    `,
+    `SELECT
+  da.assignment_id, da.assignment_status,
+  o.order_id, o.total_amount, o.payment_method_id, o.special_instructions,
+  o.delivery_partner_payout as my_earnings,
+  r.restaurant_id, r.restaurant_name,
+  r.address_line as restaurant_address_line, r.city as restaurant_city,
+  r.latitude as restaurant_latitude, r.longitude as restaurant_longitude,
+  a.address_id,
+  a.address_line as customer_address_line, a.city as customer_city, a.state,
+  a.latitude as customer_latitude, a.longitude as customer_longitude,
+  ps.status_name, pm.method_name
+FROM delivery_assignments da
+JOIN orders o ON da.order_id = o.order_id
+JOIN restaurants r ON o.restaurant_id = r.restaurant_id
+JOIN addresses a ON o.delivery_address_id = a.address_id
+JOIN payment_statuses ps ON o.payment_status_id = ps.payment_status_id
+JOIN payment_methods pm ON o.payment_method_id = pm.payment_method_id
+WHERE da.delivery_partner_id = ?
+  AND da.assignment_status IN ('out_for_delivery')
+LIMIT 1`,
     [deliveryPartnerId]
   );
 
@@ -220,8 +187,8 @@ const getCurrentOrderDetails = asyncHandler(async (req, res) => {
   );
 
   order.approx_distance_km = approxDistance;
-  order.full_name=req.user[0].full_name;
-  order.phone=req.user[0].phone;
+  order.full_name = req.user[0].full_name;
+  order.phone = req.user[0].phone;
   return res
     .status(200)
     .json(new ApiResponse(200, order, "Current order fetched"));
@@ -326,4 +293,4 @@ const getDashBoardStats = asyncHandler(async (req, res) => {
   );
 });
 
-export {togglePartnerAvailability,getDeliveryHistory,getDashBoardStats,getCurrentOrderDetails,updateOrderStatus,acceptOrder,getNewAssignments}
+export { togglePartnerAvailability, getDeliveryHistory, getDashBoardStats, getCurrentOrderDetails, updateOrderStatus, acceptOrder, getNewAssignments }

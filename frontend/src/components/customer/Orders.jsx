@@ -261,8 +261,8 @@ const Orders = () => {
 
                   {/* Special instructions */}
                   {order.special_instructions?.trim() && (
-                    <p className="mt-3 rounded-xl bg-orange-50/60 px-3 py-2 text-xs text-gray-400 italic leading-relaxed">
-                      "{order.special_instructions}"
+                    <p className="mt-3 rounded-xl py-2 text-md text-gray-600">
+                      Instructions: {order.special_instructions}
                     </p>
                   )}
 
