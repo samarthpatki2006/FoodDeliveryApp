@@ -347,110 +347,181 @@ const placeOrderFromCart = asyncHandler(async (req, res) => {
     payment_method_id,
     special_instructions,
     delivery_address_id,
-    provider
+    provider,
   } = req.body;
 
-  const [existingCart] = await db.execute(
-    "select * from carts where cart_id=? and user_id=?",
-    [cart_id, req.user[0].user_id]
-  );
+  if (
+    !cart_id ||
+    !payment_method_id ||
+    !delivery_address_id ||
+    !provider
+  ) {
+    throw new ApiError(400, "Missing required fields");
+  }
 
-  if (existingCart.length === 0) {
-    throw new ApiError(
-      400,
-      "Cart not found or unauthorized request"
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [existingCart] = await connection.execute(
+      `SELECT *
+       FROM carts
+       WHERE cart_id = ? AND user_id = ?`,
+      [cart_id, req.user[0].user_id]
     );
-  }
 
-  const [orderItems] = await db.execute(
-    `select ci.menu_item_id,
-    ci.quantity,
-    mi.price,
-    mi.item_name
-    from cart_items ci
-    join menu_items mi
-    on ci.menu_item_id=mi.menu_item_id
-    where ci.cart_id=?`,
-    [cart_id]
-  );
+    if (existingCart.length === 0) {
+      throw new ApiError(
+        400,
+        "Cart not found or unauthorized request"
+      );
+    }
 
-  if (orderItems.length === 0) {
-    throw new ApiError(400, "No items in cart");
-  }
+    const [orderItems] = await connection.execute(
+      `SELECT
+          ci.menu_item_id,
+          ci.quantity,
+          mi.price,
+          mi.item_name
+       FROM cart_items ci
+       JOIN menu_items mi
+         ON ci.menu_item_id = mi.menu_item_id
+       WHERE ci.cart_id = ?`,
+      [cart_id]
+    );
 
-  let itemPrice = 0;
+    if (orderItems.length === 0) {
+      throw new ApiError(400, "No items in cart");
+    }
 
-  orderItems.forEach((item) => {
-    itemPrice += item.quantity * item.price;
-  });
+    let itemPrice = 0;
 
-  const delivery_fee = await getDeliveryFee(
-    delivery_address_id,
-    existingCart[0].restaurant_id
-  );
+    for (const item of orderItems) {
+      itemPrice += item.quantity * item.price;
+    }
 
-  const taxAmount = await getTaxAmount(
-    itemPrice + delivery_fee
-  );
-
-  const totalAmount = itemPrice + delivery_fee + taxAmount;
-  const revenueSplit = computeSplit(itemPrice, delivery_fee);
-
-  const [orderResult] = await db.execute(
-    `insert into orders
-    (user_id,restaurant_id,delivery_address_id,
-    payment_method_id,subtotal,total_amount,delivery_fee,
-    tax_amount,special_instructions,restaurant_amount,platform_commission,partner_payout)
-    values (?,?,?,?,?,?,?,?,?)`,
-    [
-      req.user[0].user_id,
-      existingCart[0].restaurant_id,
+    const deliveryFee = await getDeliveryFee(
       delivery_address_id,
-      payment_method_id,
+      existingCart[0].restaurant_id
+    );
+
+    const taxAmount = await getTaxAmount(
+      itemPrice + deliveryFee
+    );
+
+    const totalAmount =
+      itemPrice + deliveryFee + taxAmount;
+
+    const revenueSplit = computeSplit(
       itemPrice,
-      totalAmount,
-      delivery_fee,
-      taxAmount,
-      special_instructions.trim() !== "" ? special_instructions.trim() : "",
-      revenueSplit.restaurantShare,
-      revenueSplit.platformShare,
-      revenueSplit.partnerShare
-    ]
-  );
+      deliveryFee
+    );
 
-  const order_id = orderResult.insertId;
+    const instructions =
+      special_instructions?.trim() || "";
 
-  const values = orderItems.map((item) => [
-    order_id,
-    item.menu_item_id,
-    item.item_name,
-    item.price,
-    item.quantity
-  ]);
+    // FIXED: 12 placeholders
+    const [orderResult] = await connection.execute(
+      `INSERT INTO orders
+      (
+        user_id,
+        restaurant_id,
+        delivery_address_id,
+        payment_method_id,
+        subtotal,
+        total_amount,
+        delivery_fee,
+        tax_amount,
+        special_instructions,
+        restaurant_amount,
+        platform_commission,
+        delivery_partner_payout
+      )
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        req.user[0].user_id,
+        existingCart[0].restaurant_id,
+        delivery_address_id,
+        payment_method_id,
+        itemPrice,
+        totalAmount,
+        deliveryFee,
+        taxAmount,
+        instructions,
+        revenueSplit.restaurantShare,
+        revenueSplit.platformShare,
+        revenueSplit.partnerShare,
+      ]
+    );
 
-  await db.query(
-    `insert into order_items
-    (order_id,menu_item_id,item_name,item_price,quantity)
-    values ?`,
-    [values]
-  );
+    const order_id = orderResult.insertId;
 
-  await db.execute(
-    "delete from cart_items where cart_id=?",
-    [cart_id]
-  );
+    const values = orderItems.map((item) => [
+      order_id,
+      item.menu_item_id,
+      item.item_name,
+      item.price,
+      item.quantity,
+    ]);
 
-  await db.execute("delete from carts where cart_id=?", [
-    cart_id,
-  ]);
+    await connection.query(
+      `INSERT INTO order_items
+      (order_id, menu_item_id, item_name, item_price, quantity)
+      VALUES ?`,
+      [values]
+    );
 
-  const transactionRef = generateSecureRef();
+    const transactionRef = generateSecureRef();
 
-  await db.execute("insert into payments(order_id,provider,transaction_id,amount,payment_status_id) values(?,?,?,?,?)", [order_id, provider, transactionRef, totalAmount, 2]);
+    await connection.execute(
+      `INSERT INTO payments
+      (
+        order_id,
+        provider,
+        transaction_id,
+        amount,
+        payment_status_id
+      )
+      VALUES (?,?,?,?,?)`,
+      [
+        order_id,
+        provider,
+        transactionRef,
+        totalAmount,
+        2,
+      ]
+    );
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, {}, "Order placed successfully"));
+    await connection.execute(
+      "DELETE FROM cart_items WHERE cart_id = ?",
+      [cart_id]
+    );
+
+    await connection.execute(
+      "DELETE FROM carts WHERE cart_id = ?",
+      [cart_id]
+    );
+
+    await connection.commit();
+
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        {
+          order_id,
+          transaction_id: transactionRef,
+          total_amount: totalAmount,
+        },
+        "Order placed successfully"
+      )
+    );
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 });
 
 const placeOrder = asyncHandler(async (req, res) => {
@@ -458,13 +529,21 @@ const placeOrder = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Unauthorized request");
   }
 
-  const { menu_item_id, delivery_address_id, special_instructions, quantity, payment_method_id, provider } = req.body;
+  const {
+    menu_item_id,
+    delivery_address_id,
+    special_instructions,
+    quantity,
+    payment_method_id,
+    provider,
+  } = req.body;
 
   const details = [
     menu_item_id,
     delivery_address_id,
     quantity,
     payment_method_id,
+    provider,
   ];
 
   details.forEach((detail) => {
@@ -473,73 +552,143 @@ const placeOrder = asyncHandler(async (req, res) => {
     }
   });
 
-  const [menuItem] = await db.execute(
-    "select menu_item_id,item_name,restaurant_id,price from menu_items where menu_item_id=?",
-    [menu_item_id]
-  );
+  const connection = await db.getConnection();
 
-  if (menuItem.length === 0) {
-    throw new ApiError(400, "Menu item not found");
-  }
+  try {
+    await connection.beginTransaction();
 
-  const itemPrice = Number(quantity) * Number(menuItem[0].price);
+    const [menuItem] = await connection.execute(
+      `SELECT
+        menu_item_id,
+        item_name,
+        restaurant_id,
+        price
+      FROM menu_items
+      WHERE menu_item_id = ?`,
+      [menu_item_id]
+    );
 
-  const delivery_fee = await getDeliveryFee(
-    delivery_address_id,
-    menuItem[0].restaurant_id
-  );
+    if (menuItem.length === 0) {
+      throw new ApiError(400, "Menu item not found");
+    }
 
-  const taxAmount = await getTaxAmount(
-    itemPrice + delivery_fee
-  );
+    const itemPrice =
+      Number(quantity) * Number(menuItem[0].price);
 
-  const totalAmount = itemPrice + delivery_fee + taxAmount;
-
-  const revenueSplit = computeSplit(itemPrice, delivery_fee);
-
-  const [orderResult] = await db.execute(
-    `insert into orders
-    (user_id,restaurant_id,delivery_address_id,
-    payment_method_id,subtotal,delivery_fee,
-    tax_amount,total_amount,special_instructions,restaurant_amount,platform_commission,delivery_partner_payout)
-    values (?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [
-      req.user[0].user_id,
-      menuItem[0].restaurant_id,
+    const deliveryFee = await getDeliveryFee(
       delivery_address_id,
-      payment_method_id,
+      menuItem[0].restaurant_id
+    );
+
+    const taxAmount = await getTaxAmount(
+      itemPrice + deliveryFee
+    );
+
+    const totalAmount =
+      itemPrice + deliveryFee + taxAmount;
+
+    const revenueSplit = computeSplit(
       itemPrice,
-      delivery_fee,
-      taxAmount,
-      totalAmount,
-      special_instructions,
-      revenueSplit.restaurantShare,
-      revenueSplit.platformShare,
-      revenueSplit.partnerShare
-    ]
-  );
+      deliveryFee
+    );
 
-  const order_id = orderResult.insertId;
-  await db.execute(
-    `insert into order_items
-    (order_id,menu_item_id,item_name,item_price,quantity)
-    values(?,?,?,?,?)`,
-    [
-      order_id,
-      menu_item_id,
-      menuItem[0].item_name,
-      menuItem[0].price,
-      quantity,
-    ]
-  );
+    const instructions =
+      special_instructions?.trim() || "";
 
-  const transactionRef = generateSecureRef();
+    const [orderResult] = await connection.execute(
+      `INSERT INTO orders
+      (
+        user_id,
+        restaurant_id,
+        delivery_address_id,
+        payment_method_id,
+        subtotal,
+        delivery_fee,
+        tax_amount,
+        total_amount,
+        special_instructions,
+        restaurant_amount,
+        platform_commission,
+        delivery_partner_payout
+      )
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        req.user[0].user_id,
+        menuItem[0].restaurant_id,
+        delivery_address_id,
+        payment_method_id,
+        itemPrice,
+        deliveryFee,
+        taxAmount,
+        totalAmount,
+        instructions,
+        revenueSplit.restaurantShare,
+        revenueSplit.platformShare,
+        revenueSplit.partnerShare,
+      ]
+    );
 
-  await db.execute("insert into payments(order_id,provider,transaction_id,amount,payment_status_id) values(?,?,?,?,?)", [order_id, provider, transactionRef, totalAmount, 2]);
+    const order_id = orderResult.insertId;
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, {}, "Order placed successfully"));
+    await connection.execute(
+      `INSERT INTO order_items
+      (
+        order_id,
+        menu_item_id,
+        item_name,
+        item_price,
+        quantity
+      )
+      VALUES (?,?,?,?,?)`,
+      [
+        order_id,
+        menu_item_id,
+        menuItem[0].item_name,
+        menuItem[0].price,
+        quantity,
+      ]
+    );
+
+    const transactionRef = generateSecureRef();
+
+    await connection.execute(
+      `INSERT INTO payments
+      (
+        order_id,
+        provider,
+        transaction_id,
+        amount,
+        payment_status_id
+      )
+      VALUES (?,?,?,?,?)`,
+      [
+        order_id,
+        provider,
+        transactionRef,
+        totalAmount,
+        2,
+      ]
+    );
+
+    await connection.commit();
+
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        {
+          order_id,
+          transaction_id: transactionRef,
+          total_amount: totalAmount,
+        },
+        "Order placed successfully"
+      )
+    );
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 });
 
 const getMenuItems = asyncHandler(async (req, res) => {

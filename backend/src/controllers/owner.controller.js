@@ -366,7 +366,7 @@ const getOrderStatuses=asyncHandler(async(req,res)=>{
   if(req.user[0].role_name!=="owner"){
     throw new ApiError(401,"Unauthorized request");
   }
-  const [data]=await db.execute("select * from order_statuses where order_status_id<6");
+  const [data]=await db.execute("select * from order_statuses where order_status_id<5");
 
   res.status(200).json(new ApiResponse(200,data,"Order statuses fetched"));
 })
